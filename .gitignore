@@ -1,3 +1,5 @@
+data/
+
 # matt doesn't like ide config stuff :(
 .idea
 .vscode
