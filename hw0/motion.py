@@ -40,20 +40,24 @@ class MotionModel:
         s = np.zeros_like(self._state)
         s_prev = self._state
 
-        # radius r of the curved trajectory := |v|/w
         v = control[0]
         w = control[1]
 
-        if w != 0:
-            r = v / w
+        # theta_t = theta_t-1 + wdt
+        s[2] = s_prev[2] + (w * dt)
 
-            s[0] = s_prev[0] + r * np.sin(w * dt) * np.tan(w * dt / 2)
-            s[1] = s_prev[1] + r * np.sin(w * dt)
-            s[2] = s_prev[2] + w * dt
-        else:
-            s[0] = s_prev[0] + (v * np.cos(s_prev[2]) * dt)
-            s[1] = s_prev[1] + (v * np.sin(s_prev[2]) * dt)
+        if (w * dt) == 0:
+            # in this case, we have a straight line
+            # (infinite radius, infinitesmal theta). handle that directly
+            s[0] = s_prev[0] + (v * np.cos(s[2]))
+            s[1] = s_prev[1] + (v * np.sin(s[2]))
             s[2] = s_prev[2]
+        else:
+            # radius r of the arc trajectory := |v|/wdt
+            r = v / (w * dt)
+
+            s[0] = s_prev[0] + r * (np.sin(s_prev[2]) - np.sin(s[2]))
+            s[1] = s_prev[1] + r * (np.cos(s[2]) - np.cos(s_prev[2]))
 
         self._state = s
         self.t_s += dt
