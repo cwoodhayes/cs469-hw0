@@ -29,16 +29,17 @@ def circle_test(ds: Dataset) -> None:
     # make the robot go in a big circle. should do it exactly once
 
     r = 10  # radius
-    steps = 5  # number of steps to trace the circle
+    steps = 50  # number of steps to trace the circle
     dt = 1
 
-    v = (2 * np.pi) / 50
-    w = v / (r * dt)
+    w = (2 * np.pi) / steps
+    v = r * w * dt
 
     m = MotionModel()
     states = [m.DEFAULT_INITIAL_STATE]
 
     commands = np.ones(shape=(steps, 2)) * (v, w)
+    print(commands)
 
     for idx in range(commands.shape[0]):
         states.append(m.step(commands[idx], dt))
@@ -47,7 +48,23 @@ def circle_test(ds: Dataset) -> None:
     ax = plt.subplot()
     plot_robot_path(states, dt, ax)
     ax.set_title("Circle Test")
-    plt.show()
+    # plt.show()
+
+    # some quick simple tests
+    expected_angles = np.linspace(0, 2 * np.pi, steps)
+    print("\nangles")
+    print(states[:, 2].round(2))
+    print("\n expected angles")
+    print(expected_angles.round(2))
+
+    # check that the lengths of all the segments are the same
+    rotated = np.zeros_like(states)
+    rotated[0, :] = states[-1, :]
+    rotated[1:, :] = states[:-1, :]
+    diffs = states[:, 0:1] - rotated[:, 0:1]
+    norms = np.linalg.norm(diffs, axis=1)
+    print("\ndistances (should b same)")
+    print(np.round(norms, decimals=1))
 
 
 def question_1(ds: Dataset) -> None:
