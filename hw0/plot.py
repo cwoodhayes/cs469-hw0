@@ -4,7 +4,6 @@ plotting functions for robot data
 
 import numpy as np
 from matplotlib.axes import Axes
-from matplotlib.patches import Circle
 
 
 def plot_robot_path(

@@ -50,6 +50,7 @@ def question_1(ds: Dataset) -> None:
 def question_2(ds: Dataset) -> None:
     # this is for debugging purposes, to grab only a subset of the points
     END_TIME = 1288971991.929
+    # END_TIME = 2288973229.039  # way past the end; uncomment to use all points
     ground_truth = ds.ground_truth[ds.ground_truth["time_s"] < END_TIME]
     control = ds.control[ds.control["time_s"] < END_TIME]
     # end debug stuff
