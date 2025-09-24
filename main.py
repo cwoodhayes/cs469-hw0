@@ -61,10 +61,10 @@ def circle_test(ds: Dataset) -> None:
     rotated = np.zeros_like(states)
     rotated[0, :] = states[-1, :]
     rotated[1:, :] = states[:-1, :]
-    diffs = states[:, 0:1] - rotated[:, 0:1]
-    norms = np.linalg.norm(diffs, axis=1)
+    diffs = states[:, 0:2] - rotated[:, 0:2]
+    distances = np.linalg.norm(diffs, axis=1)
     print("\ndistances (should b same)")
-    print(np.round(norms, decimals=1))
+    print(np.round(distances, decimals=1))
 
 
 def question_1(ds: Dataset) -> None:
