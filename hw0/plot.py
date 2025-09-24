@@ -57,6 +57,9 @@ def plot_robot_path(
         )
     )
 
+    # TODO make these the same length no matter how far i zoom in?
+    # would make it a bit easier to see
+
     if show_orientations:
         # mark each orientation on the locations with an arrow
         ax.quiver(

@@ -19,8 +19,35 @@ def main():
 
     # my assigned dataset is ds1, so I'm hardcoding this for now
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
+    circle_test(ds)
     # question_1(ds)
-    question_2(ds)
+    # question_2(ds)
+
+
+def circle_test(ds: Dataset) -> None:
+    # test for my own reassurance.
+    # make the robot go in a big circle. should do it exactly once
+
+    r = 10  # radius
+    steps = 5  # number of steps to trace the circle
+    dt = 1
+
+    v = (2 * np.pi) / 50
+    w = v / (r * dt)
+
+    m = MotionModel()
+    states = [m.DEFAULT_INITIAL_STATE]
+
+    commands = np.ones(shape=(steps, 2)) * (v, w)
+
+    for idx in range(commands.shape[0]):
+        states.append(m.step(commands[idx], dt))
+
+    states = np.array(states)
+    ax = plt.subplot()
+    plot_robot_path(states, dt, ax)
+    ax.set_title("Circle Test")
+    plt.show()
 
 
 def question_1(ds: Dataset) -> None:
