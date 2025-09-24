@@ -4,6 +4,7 @@ plotting functions for robot data
 
 import numpy as np
 from matplotlib.axes import Axes
+from matplotlib.patches import Circle
 
 
 def plot_robot_path(
@@ -23,6 +24,22 @@ def plot_robot_path(
     :param axes: axes object on which we should plot
     :param display_orientations: show arrows
     """
+    # add nice dots for the endpoints
+    ax.plot(
+        x_all[0, 0],
+        x_all[0, 1],
+        marker="o",
+        markersize=10,
+        color="#00bf00",
+    )
+    ax.plot(
+        x_all[-1, 0],
+        x_all[-1, 1],
+        marker="o",
+        markersize=10,
+        color="#bf0000",
+    )
+
     # plot each robot location
     ax.plot(
         x_all[:, 0],

@@ -48,14 +48,20 @@ def question_1(ds: Dataset) -> None:
 
 
 def question_2(ds: Dataset) -> None:
+    # this is for debugging purposes, to grab only a subset of the points
+    END_TIME = 1288971991.929
+    ground_truth = ds.ground_truth[ds.ground_truth["time_s"] < END_TIME]
+    control = ds.control[ds.control["time_s"] < END_TIME]
+    # end debug stuff
+
     # grab the initial location from the first ground truth value
-    x_0 = ds.ground_truth[["x_m", "y_m", "orientation_rad"]].to_numpy()[0]
+    x_0 = ground_truth[["x_m", "y_m", "orientation_rad"]].to_numpy()[0]
     # and the first timestamp from the controls
-    t_0 = ds.control["time_s"][0]
+    t_0 = control["time_s"][0]
 
     # grab the commands. they are already in an ok format for us
-    u_ts = ds.control["time_s"].to_numpy()
-    u = ds.control[["forward_velocity_mps", "angular_velocity_radps"]].to_numpy()
+    u_ts = control["time_s"].to_numpy()
+    u = control[["forward_velocity_mps", "angular_velocity_radps"]].to_numpy()
 
     states = [x_0]
     m = MotionModel(x_0, t_0)
@@ -78,8 +84,8 @@ def question_2(ds: Dataset) -> None:
     # the timestamps will be different but the trajectory should still be the same.
     ax_truth = plt.subplot(1, 2, 2)
     plot_robot_path(
-        ds.ground_truth[["x_m", "y_m", "orientation_rad"]].to_numpy(),
-        ds.ground_truth["time_s"].to_numpy(),
+        ground_truth[["x_m", "y_m", "orientation_rad"]].to_numpy(),
+        ground_truth["time_s"].to_numpy(),
         ax_truth,
         show_orientations=True,
     )
