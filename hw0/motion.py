@@ -11,11 +11,21 @@ class MotionModel:
     """
 
     # x, y, \theta
-    INITIAL_STATE = (0.0, 0.0, 0.0)
+    DEFAULT_INITIAL_STATE = (0.0, 0.0, 0.0)
 
-    def __init__(self):
-        self._state = np.array(self.INITIAL_STATE)
-        self.t_s = 0.0
+    def __init__(self, x_0: np.ndarray = None, t_0: float = 0.0):
+        if x_0 is None:
+            x_0 = np.array(self.DEFAULT_INITIAL_STATE)
+        self._state = x_0
+        self.t_s = t_0
+
+    def step_abs_t(self, control: np.ndarray, t: float) -> np.ndarray:
+        """
+        Same as step(), but a timestamp is given rather than a timestep.
+        This must be > the previous timestamp.
+        """
+        dt = t - self.t_s
+        return self.step(control, dt)
 
     def step(self, control: np.ndarray, dt: float) -> np.ndarray:
         """
@@ -41,8 +51,8 @@ class MotionModel:
             s[1] = s_prev[1] + r * np.sin(w * dt)
             s[2] = s_prev[2] + w * dt
         else:
-            s[0] = s_prev[0] + v * np.cos(s_prev[2])
-            s[1] = s_prev[1] + v * np.sin(s_prev[2])
+            s[0] = s_prev[0] + (v * np.cos(s_prev[2]) * dt)
+            s[1] = s_prev[1] + (v * np.sin(s_prev[2]) * dt)
             s[2] = s_prev[2]
 
         self._state = s
