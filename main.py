@@ -86,16 +86,18 @@ def question_1(ds: Dataset) -> None:
         states.append(m.step(commands[idx], 1.0))
 
     states = np.array(states)
-    ax = plt.subplot()
+    fig, ax = plt.subplots(1, 1)
     plot_robot_path(states, 1.0, ax)
     ax.set_title("Q1: Robot path over 5 example commands")
+    fig.canvas.manager.set_window_title("question_1")
+
     plt.show()
 
 
 def question_2(ds: Dataset) -> None:
     # this is for debugging purposes, to grab only a subset of the points
-    END_TIME = 1288971999.929
-    # END_TIME = 2288973229.039  # way past the end; uncomment to use all points
+    # END_TIME = 1288971999.929
+    END_TIME = 2288973229.039  # way past the end; uncomment to use all points
     ground_truth = ds.ground_truth[ds.ground_truth["time_s"] < END_TIME]
     control = ds.control[ds.control["time_s"] < END_TIME]
     # end debug stuff
@@ -116,7 +118,8 @@ def question_2(ds: Dataset) -> None:
         states.append(m.step_abs_t(u[idx], u_ts[idx]))
 
     states = np.array(states)
-    ax_control = plt.subplot(1, 2, 1)
+    fig, axes = plt.subplots(1, 2)
+    ax_control = axes[0]
     plot_robot_path(
         states,
         u_ts,
@@ -128,7 +131,7 @@ def question_2(ds: Dataset) -> None:
 
     # make a plot for the actual ground truth values
     # the timestamps will be different but the trajectory should still be the same.
-    ax_truth = plt.subplot(1, 2, 2)
+    ax_truth = axes[1]
     plot_robot_path(
         ground_truth[["x_m", "y_m", "orientation_rad"]].to_numpy(),
         ground_truth["time_s"].to_numpy(),
@@ -136,6 +139,7 @@ def question_2(ds: Dataset) -> None:
         show_orientations=True,
     )
     ax_truth.set_title("ground truth trajectory")
+    fig.canvas.manager.set_window_title("question_2")
 
     plt.show()
 
