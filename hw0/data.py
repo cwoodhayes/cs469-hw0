@@ -4,7 +4,7 @@ Code for loading in the experimental data
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import InitVar, dataclass, field
 import pathlib
 
 import pandas as pd
@@ -25,6 +25,29 @@ class Dataset:
     landmark_ground_truth: pd.DataFrame
     measurement: pd.DataFrame
 
+    # measurement file, but using the landmark ground truth
+    # subject labels (translated using barcodes)
+    # (this way landmarks & measurements can be used together more easily)
+    measurement_fix: pd.DataFrame = field(init=False)
+
+    def __post_init__(self) -> None:
+        # rectify labels between measurement & ground truth
+
+        # in barcodes data file:
+        # "subject" = landmark subject  <- what we want to use (cuz they're nicer numbers)
+        # "barcode" = measurement subject
+        bc = self.barcodes
+
+        msr_subj_to_landm_subj = pd.Series(
+            bc["subject"].values, index=bc["barcode"].values
+        )
+
+        self.measurement_fix = self.measurement.copy()
+        self.measurement_fix["subject"] = self.measurement["subject"].map(
+            msr_subj_to_landm_subj
+        )
+        print("test")
+
     @classmethod
     def from_dataset_directory(cls, p: pathlib.Path) -> Dataset:
         """
@@ -39,7 +62,7 @@ class Dataset:
         prefix = p.stem
         barcodes = pd.read_csv(
             p / f"{prefix}_Barcodes.dat",
-            sep="\s+",
+            sep=r"\s+",
             engine="python",
             comment="#",
             names=["subject", "barcode"],
@@ -47,7 +70,7 @@ class Dataset:
 
         control = pd.read_csv(
             p / f"{prefix}_Control.dat",
-            sep="\s+",
+            sep=r"\s+",
             engine="python",
             comment="#",
             names=["time_s", "forward_velocity_mps", "angular_velocity_radps"],
@@ -55,7 +78,7 @@ class Dataset:
 
         groundtruth = pd.read_csv(
             p / f"{prefix}_Groundtruth.dat",
-            sep="\s+",
+            sep=r"\s+",
             engine="python",
             comment="#",
             names=["time_s", "x_m", "y_m", "orientation_rad"],
@@ -63,7 +86,7 @@ class Dataset:
 
         landmark = pd.read_csv(
             p / f"{prefix}_Landmark_Groundtruth.dat",
-            sep="\s+",
+            sep=r"\s+",
             engine="python",
             comment="#",
             names=["subject", "x_m", "y_m", "x_std_dev", "y_std_dev"],
@@ -71,7 +94,7 @@ class Dataset:
 
         measurement = pd.read_csv(
             p / f"{prefix}_Measurement.dat",
-            sep="\s+",
+            sep=r"\s+",
             engine="python",
             comment="#",
             names=["time_s", "subject", "range_m", "bearing_rad"],
