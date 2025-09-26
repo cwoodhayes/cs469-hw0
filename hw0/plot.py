@@ -2,8 +2,12 @@
 plotting functions for robot data
 """
 
+from matplotlib.patches import RegularPolygon
 import numpy as np
 from matplotlib.axes import Axes
+import pandas as pd
+
+from hw0.measure import ZType
 
 
 def plot_robot_path(
@@ -74,3 +78,83 @@ def plot_robot_path(
 
     ax.grid(True)
     # ax.set_aspect("equal")
+
+
+def plot_z_and_landmarks(
+    x: np.ndarray, z: ZType, landmarks: pd.DataFrame, ax: Axes
+) -> None:
+    """
+    Plot the real landmarks + the landmarks as seen in an observation
+
+    :param x: state (x, y, theta)
+    :param z: map of landmark subject #'s to locations
+    :type z: ZType
+    :param landmarks: landmarks dataframe as in data.py
+    :type landmarks: pd.DataFrame
+    """
+    ax.grid(visible=True)
+
+    # plot the real landmarks
+    x_land = landmarks["x_m"].to_numpy()
+    y_land = landmarks["y_m"].to_numpy()
+    ax.scatter(
+        x_land,
+        y_land,
+        s=200,
+        color="skyblue",
+        edgecolors="k",
+    )
+
+    # label them with their subject #
+    for idx, row in landmarks[["x_m", "y_m", "subject"]].iterrows():
+        ax.text(
+            row["x_m"],
+            row["y_m"],
+            round(row["subject"]),
+            fontsize=10,
+            ha="center",
+            va="center",
+            color="black",
+        )
+
+    # add the robot to the plot in the form of an arrow
+
+    length = 1.25  # in inches
+    dx = np.cos(x[2]) * length
+    dy = np.sin(x[2]) * length
+
+    ax.quiver(
+        x[0],
+        x[1],
+        dx,
+        dy,
+        units="inches",
+        angles="xy",
+        scale=10,
+        scale_units="width",
+        color="red",
+        width=0.05,
+    )
+
+    # plot the measured landmarks
+    x_msr = z["x_m"].to_numpy()
+    y_msr = z["y_m"].to_numpy()
+    ax.scatter(
+        x_msr,
+        y_msr,
+        s=200,
+        color="green",
+        edgecolors="k",
+    )
+
+    # label them with their subject #
+    for idx, row in z[["x_m", "y_m", "subject"]].iterrows():
+        ax.text(
+            row["x_m"],
+            row["y_m"],
+            round(row["subject"]),
+            fontsize=10,
+            ha="center",
+            va="center",
+            color="black",
+        )

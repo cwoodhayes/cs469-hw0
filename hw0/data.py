@@ -46,7 +46,6 @@ class Dataset:
         self.measurement_fix["subject"] = self.measurement["subject"].map(
             msr_subj_to_landm_subj
         )
-        print("test")
 
     @classmethod
     def from_dataset_directory(cls, p: pathlib.Path) -> Dataset:

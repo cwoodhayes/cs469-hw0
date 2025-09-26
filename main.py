@@ -4,12 +4,15 @@ Runs a variety of filter exercises specified in CS469's Homework 0
 
 import pathlib
 
+from matplotlib.axes import Axes
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from hw0.data import Dataset
-from hw0.motion import NoiselessMotionModel, TextbookNoiselessMotionModel
-from hw0.plot import plot_robot_path
+from hw0.motion import TextbookNoiselessMotionModel
+from hw0.plot import plot_robot_path, plot_z_and_landmarks
+from hw0.measure import MeasurePredictor
 
 REPO_ROOT = pathlib.Path(__file__).parent
 
@@ -20,8 +23,9 @@ def main():
     # my assigned dataset is ds1, so I'm hardcoding this for now
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
     # circle_test(ds)
-    question_1(ds)
-    question_2(ds)
+    # question_2(ds)
+    # question_3(ds)
+    question_6(ds)
 
 
 def circle_test(ds: Dataset) -> None:
@@ -68,7 +72,7 @@ def circle_test(ds: Dataset) -> None:
     plt.show()
 
 
-def question_1(ds: Dataset) -> None:
+def question_2(ds: Dataset) -> None:
     m = TextbookNoiselessMotionModel()
 
     commands = np.array(
@@ -89,12 +93,12 @@ def question_1(ds: Dataset) -> None:
     fig, ax = plt.subplots(1, 1)
     plot_robot_path(states, 1.0, ax)
     ax.set_title("Q1: Robot path over 5 example commands")
-    fig.canvas.manager.set_window_title("question_1")
+    fig.canvas.manager.set_window_title("question_2")
 
     plt.show()
 
 
-def question_2(ds: Dataset) -> None:
+def question_3(ds: Dataset) -> None:
     # this is for debugging purposes, to grab only a subset of the points
     # END_TIME = 1288971999.929
     END_TIME = 2288973229.039  # way past the end; uncomment to use all points
@@ -139,8 +143,40 @@ def question_2(ds: Dataset) -> None:
         show_orientations=True,
     )
     ax_truth.set_title("ground truth trajectory")
-    fig.canvas.manager.set_window_title("question_2")
+    fig.canvas.manager.set_window_title("question_3")
 
+    plt.show()
+
+
+def question_6(ds: Dataset) -> None:
+    test_data = pd.DataFrame(
+        {
+            "position": [
+                (2, 3, 0),
+                (0, 3, 0),
+                (1, -2, np.pi / 4),
+            ],
+            "landmark": [6, 13, 17],
+        }
+    )
+
+    predictor = MeasurePredictor()
+
+    test_data["z"] = test_data["position"].apply(lambda row: predictor.z_given_x(row))
+
+    fig, axes = plt.subplots(1, 3)
+
+    for idx, row in test_data.iterrows():
+        ax: Axes = axes[idx]
+        plot_z_and_landmarks(
+            row["position"],
+            row["z"],
+            ds.landmark_ground_truth,
+            ax,
+        )
+        ax.set_title(f"pos={row['position']},mark={row['landmark']}")
+
+    fig.canvas.manager.set_window_title("question_6")
     plt.show()
 
 
