@@ -23,8 +23,8 @@ def main():
     # my assigned dataset is ds1, so I'm hardcoding this for now
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
     # circle_test(ds)
-    # question_2(ds)
-    # question_3(ds)
+    question_2(ds)
+    question_3(ds)
     question_6(ds)
 
 
@@ -73,6 +73,7 @@ def circle_test(ds: Dataset) -> None:
 
 
 def question_2(ds: Dataset) -> None:
+    print("!!!!!!!!!!!!!!!!!!! QUESTION 2 !!!!!!!!!!!")
     m = TextbookNoiselessMotionModel()
 
     commands = np.array(
@@ -99,6 +100,8 @@ def question_2(ds: Dataset) -> None:
 
 
 def question_3(ds: Dataset) -> None:
+    print("!!!!!!!!!!!!!!!!!!! QUESTION 3 !!!!!!!!!!!")
+
     # this is for debugging purposes, to grab only a subset of the points
     # END_TIME = 1288971999.929
     END_TIME = 2288973229.039  # way past the end; uncomment to use all points
@@ -148,7 +151,8 @@ def question_3(ds: Dataset) -> None:
     plt.show()
 
 
-def question_6(ds: Dataset) -> None:
+def question_6(ds: Dataset, plot: bool = False) -> None:
+    print("!!!!!!!!!!!!!!!!!!! QUESTION 6 !!!!!!!!!!!")
     test_data = pd.DataFrame(
         {
             "position": [
@@ -166,18 +170,26 @@ def question_6(ds: Dataset) -> None:
         lambda row: predictor.z_given_x(np.array(row))
     )
 
-    fig, axes = plt.subplots(1, 3)
+    # fig, axes = plt.subplots(1, 3)
 
     for idx, row in test_data.iterrows():
-        ax: Axes = axes[idx]
-        plot_z_and_landmarks(
-            row["position"],
-            row["z"],
-            ds.landmark_ground_truth,
-            ax,
-        )
-        ax.set_title(f"pos={row['position']},mark={row['landmark']}")
-        plot_z_polar(row["position"], row["z"])
+        # ax: Axes = axes[idx]
+        # plot_z_and_landmarks(
+        #     row["position"],
+        #     row["z"],
+        #     ds.landmark_ground_truth,
+        #     ax,
+        # )
+        if plot:
+            ax = plot_z_polar(row["position"], row["z"])
+            ax.set_title(f"pos={row['position']},mark={row['landmark']}")
+
+        # print out the correct answers to the CLI:
+        z = row["z"]
+        z_mark = z[z["subject"] == row["landmark"]]
+        print(f"PREDICTION for landmark {row['landmark']}, x={row['position']}:")
+        print(f" -- bearing : {z_mark['bearing_rad'].item():.3} radians")
+        print(f" -- range: {z_mark['range_m'].item():.3} meters")
 
     # fig.canvas.manager.set_window_title("question_6")
     plt.show()

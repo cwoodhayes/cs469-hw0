@@ -160,7 +160,7 @@ def plot_z_and_landmarks(
         )
 
 
-def plot_z_polar(x: np.ndarray, z: ZType) -> None:
+def plot_z_polar(x: np.ndarray, z: ZType) -> Axes:
     """
     Plot the real landmarks + the landmarks as seen in an observation
 
@@ -211,3 +211,5 @@ def plot_z_polar(x: np.ndarray, z: ZType) -> None:
             va="center",
             color="black",
         )
+
+    return ax
