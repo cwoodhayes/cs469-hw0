@@ -20,10 +20,10 @@ REPO_ROOT = pathlib.Path(__file__).parent
 def main():
     print("cs469 Homework 1")
 
-    # my assigned dataset is ds1, so I'm hardcoding this for now
+    # my assigned dataset is ds1, so I'm hardcoding this
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
     # circle_test(ds)
-    question_2(ds)
+    # question_2(ds)
     question_3(ds)
     question_6(ds)
 
@@ -114,16 +114,19 @@ def question_3(ds: Dataset) -> None:
     # and the first timestamp from the controls
     t_0 = control["time_s"][0]
 
-    # grab the commands. they are already in an ok format for us
+    # grab the commands
     u_ts = control["time_s"].to_numpy()
     u = control[["forward_velocity_mps", "angular_velocity_radps"]].to_numpy()
+    u = u / (10, 1)
 
     states = [x_0]
     m = TextbookNoiselessMotionModel(x_0, t_0)
 
+    # simulate the robot's motion
     for idx in range(u.shape[0]):
         states.append(m.step_abs_t(u[idx], u_ts[idx]))
 
+    # plot the result
     states = np.array(states)
     fig, axes = plt.subplots(1, 2)
     ax_control = axes[0]

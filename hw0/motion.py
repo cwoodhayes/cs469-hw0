@@ -82,9 +82,8 @@ class NoiselessMotionModel(NoiselessMotionModelBase):
 
 class TextbookNoiselessMotionModel(NoiselessMotionModelBase):
     """
-    Motion model drawn from the Probabilistic robotics textbook
-    Implemented for comparison against my hand-derived model above;
-    I didn't realize the textbook had its own solution to this.
+    Motion model adapted from the Probabilistic robotics textbook
+    Implemented for comparison against my own model above;
 
     Probabilistic Robotics, section 5.3, page 101
     """
