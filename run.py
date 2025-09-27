@@ -23,7 +23,7 @@ def main():
     # my assigned dataset is ds1, so I'm hardcoding this
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
     # circle_test(ds)
-    # question_2(ds)
+    question_2(ds)
     question_3(ds)
     question_6(ds)
 
@@ -93,7 +93,7 @@ def question_2(ds: Dataset) -> None:
     states = np.array(states)
     fig, ax = plt.subplots(1, 1)
     plot_robot_path(states, 1.0, ax)
-    ax.set_title("Q1: Robot path over 5 example commands")
+    ax.set_title("Q2: Robot path over 5 example commands")
     fig.canvas.manager.set_window_title("question_2")
 
     plt.show()
