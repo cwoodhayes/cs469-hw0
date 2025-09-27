@@ -142,7 +142,7 @@ def plot_z_and_landmarks(
     ax.scatter(
         z["x_m"],
         z["y_m"],
-        s=100,
+        s=80,
         color="green",
         edgecolors="k",
     )
@@ -170,6 +170,7 @@ def plot_z_polar(x: np.ndarray, z: ZType) -> None:
     """
     fig = plt.figure()
     ax = fig.add_subplot(111, polar=True)  # <-- polar axes
+    ax.set_theta_zero_location("N")
     ax.grid(visible=True)
 
     # add the robot to the plot in the form of an arrow

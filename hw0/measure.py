@@ -53,9 +53,10 @@ class MeasurePredictor:
             # get angle between robot POV and the robot->landmark vector
             cos_theta = robot_pov_vec.dot(r_vec) / r
             theta = np.arccos(cos_theta)
-            if r_vec[1] < 0:
-                # arccos always evaluates to theta <= pi radians; we need to
-                # catch pi<theta<=2pi ourselves
+            # arccos always evaluates to theta <= pi radians; we need to
+            # catch pi<theta<=2pi ourselves
+            # can use the cross product here
+            if np.cross(robot_pov_vec, r_vec) < 0:
                 theta = -theta
 
             z.loc[idx, "range_m"] = r
