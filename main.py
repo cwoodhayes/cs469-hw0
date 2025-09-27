@@ -11,7 +11,7 @@ import pandas as pd
 
 from hw0.data import Dataset
 from hw0.motion import TextbookNoiselessMotionModel
-from hw0.plot import plot_robot_path, plot_z_and_landmarks
+from hw0.plot import plot_robot_path, plot_z_and_landmarks, plot_z_polar
 from hw0.measure import MeasurePredictor
 
 REPO_ROOT = pathlib.Path(__file__).parent
@@ -154,7 +154,7 @@ def question_6(ds: Dataset) -> None:
             "position": [
                 (2, 3, 0),
                 (0, 3, 0),
-                (1, -2, np.pi / 4),
+                (1, -2, 0),
             ],
             "landmark": [6, 13, 17],
         }
@@ -162,7 +162,9 @@ def question_6(ds: Dataset) -> None:
 
     predictor = MeasurePredictor(ds.landmark_ground_truth)
 
-    test_data["z"] = test_data["position"].apply(lambda row: predictor.z_given_x(row))
+    test_data["z"] = test_data["position"].apply(
+        lambda row: predictor.z_given_x(np.array(row))
+    )
 
     fig, axes = plt.subplots(1, 3)
 
@@ -175,8 +177,9 @@ def question_6(ds: Dataset) -> None:
             ax,
         )
         ax.set_title(f"pos={row['position']},mark={row['landmark']}")
+        plot_z_polar(row["position"], row["z"])
 
-    fig.canvas.manager.set_window_title("question_6")
+    # fig.canvas.manager.set_window_title("question_6")
     plt.show()
 
 

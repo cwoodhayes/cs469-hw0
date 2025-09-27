@@ -39,13 +39,26 @@ class MeasurePredictor:
         )
 
         for idx, mark in self._landmarks.iterrows():
-            z["subject"][idx] = mark["subject"]
-            landmark_loc = np.array(mark["x_m"], mark["y_m"])
-            x_to_l = landmark_loc - x[0:2]
-            r = np.linalg.norm(x_to_l)
-            alpha = np.arcsin(x_to_l[1] / r)
+            # set subject to be the same
+            z.loc[idx, "subject"] = mark["subject"]
 
-            z["range_m"][idx] = r
-            z["bearing_rad"][idx] = x[2] + alpha
+            # get vector pointing from robot to landmark
+            p_landmark = np.array((mark["x_m"], mark["y_m"]))
+            r_vec = p_landmark - x[0:2]
+            r = np.linalg.norm(r_vec)
+
+            # get unit vector of robot's POV
+            robot_pov_vec = np.array((np.cos(x[2]), np.sin(x[2])))
+
+            # get angle between robot POV and the robot->landmark vector
+            cos_theta = robot_pov_vec.dot(r_vec) / r
+            theta = np.arccos(cos_theta)
+            if r_vec[1] < 0:
+                # arccos always evaluates to theta <= pi radians; we need to
+                # catch pi<theta<=2pi ourselves
+                theta = -theta
+
+            z.loc[idx, "range_m"] = r
+            z.loc[idx, "bearing_rad"] = theta
 
         return z

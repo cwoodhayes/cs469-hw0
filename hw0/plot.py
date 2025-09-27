@@ -2,9 +2,9 @@
 plotting functions for robot data
 """
 
-from matplotlib.patches import RegularPolygon
 import numpy as np
 from matplotlib.axes import Axes
+import matplotlib.pyplot as plt
 import pandas as pd
 
 from hw0.measure import ZType
@@ -142,7 +142,7 @@ def plot_z_and_landmarks(
     ax.scatter(
         z["x_m"],
         z["y_m"],
-        s=200,
+        s=100,
         color="green",
         edgecolors="k",
     )
@@ -152,6 +152,58 @@ def plot_z_and_landmarks(
         ax.text(
             row["x_m"],
             row["y_m"],
+            round(row["subject"]),
+            fontsize=10,
+            ha="center",
+            va="center",
+            color="black",
+        )
+
+
+def plot_z_polar(x: np.ndarray, z: ZType) -> None:
+    """
+    Plot the real landmarks + the landmarks as seen in an observation
+
+    :param x: state (x, y, theta)
+    :param z: map of landmark subject #'s to locations
+    :type z: ZType
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(111, polar=True)  # <-- polar axes
+    ax.grid(visible=True)
+
+    # add the robot to the plot in the form of an arrow
+    # this is in his ref frame so he's always (0,0)
+
+    length = 1.25  # in inches
+
+    ax.quiver(
+        0,
+        0,
+        0,
+        length,
+        units="inches",
+        angles="xy",
+        scale=10,
+        scale_units="width",
+        color="red",
+        width=0.05,
+    )
+
+    # plot the measured landmarks
+    ax.scatter(
+        z["bearing_rad"],
+        z["range_m"],
+        s=200,
+        color="green",
+        edgecolors="k",
+    )
+
+    # label them with their subject #
+    for _, row in z.iterrows():
+        ax.text(
+            row["bearing_rad"],
+            row["range_m"],
             round(row["subject"]),
             fontsize=10,
             ha="center",
