@@ -19,10 +19,8 @@ class MeasurePredictor:
     Predicts z given a noiseless x
     """
 
-    def __init__(self):
-        self._alpha = 1.0
-        # weighted by y = e^(-\alpha * dt)
-        # where dt is time-since-measurement
+    def __init__(self, landmarks: pd.DataFrame):
+        self._landmarks = landmarks
 
     def z_given_x(self, x: np.ndarray) -> ZType:
         """
@@ -34,11 +32,20 @@ class MeasurePredictor:
         :rtype: ZType
         """
 
-        out = pd.DataFrame(
-            {
-                "subject": [8],
-                "x_m": [12.0],
-                "y_m": [11.0],
-            }
+        z = pd.DataFrame(
+            np.nan,
+            index=range(self._landmarks.shape[0]),
+            columns=["subject", "range_m", "bearing_rad"],
         )
-        return out
+
+        for idx, mark in self._landmarks.iterrows():
+            z["subject"][idx] = mark["subject"]
+            landmark_loc = np.array(mark["x_m"], mark["y_m"])
+            x_to_l = landmark_loc - x[0:2]
+            r = np.linalg.norm(x_to_l)
+            alpha = np.arcsin(x_to_l[1] / r)
+
+            z["range_m"][idx] = r
+            z["bearing_rad"][idx] = x[2] + alpha
+
+        return z

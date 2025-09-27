@@ -106,7 +106,7 @@ def plot_z_and_landmarks(
     )
 
     # label them with their subject #
-    for idx, row in landmarks[["x_m", "y_m", "subject"]].iterrows():
+    for _, row in landmarks[["x_m", "y_m", "subject"]].iterrows():
         ax.text(
             row["x_m"],
             row["y_m"],
@@ -137,18 +137,18 @@ def plot_z_and_landmarks(
     )
 
     # plot the measured landmarks
-    x_msr = z["x_m"].to_numpy()
-    y_msr = z["y_m"].to_numpy()
+    z["x_m"] = (z["range_m"] * np.cos(z["bearing_rad"])).to_numpy() + x[0]
+    z["y_m"] = (z["range_m"] * np.sin(z["bearing_rad"])).to_numpy() + x[1]
     ax.scatter(
-        x_msr,
-        y_msr,
+        z["x_m"],
+        z["y_m"],
         s=200,
         color="green",
         edgecolors="k",
     )
 
     # label them with their subject #
-    for idx, row in z[["x_m", "y_m", "subject"]].iterrows():
+    for _, row in z[["x_m", "y_m", "subject"]].iterrows():
         ax.text(
             row["x_m"],
             row["y_m"],

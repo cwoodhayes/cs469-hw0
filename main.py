@@ -160,7 +160,7 @@ def question_6(ds: Dataset) -> None:
         }
     )
 
-    predictor = MeasurePredictor()
+    predictor = MeasurePredictor(ds.landmark_ground_truth)
 
     test_data["z"] = test_data["position"].apply(lambda row: predictor.z_given_x(row))
 
