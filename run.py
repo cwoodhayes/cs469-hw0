@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from hw0.data import Dataset
-from hw0.motion import TextbookNoiselessMotionModel
+from hw0.motion import TwistNoiselessMotionModel, TextbookNoiselessMotionModel
 from hw0.plot import plot_robot_path, plot_z_and_landmarks, plot_z_polar
 from hw0.measure import MeasurePredictor
 
@@ -22,10 +22,10 @@ def main():
 
     # my assigned dataset is ds1, so I'm hardcoding this
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
-    # circle_test(ds)
-    question_2(ds)
-    question_3(ds)
-    question_6(ds)
+    circle_test(ds)
+    # question_2(ds)
+    # question_3(ds)
+    # question_6(ds)
 
 
 def circle_test(ds: Dataset) -> None:
@@ -39,7 +39,7 @@ def circle_test(ds: Dataset) -> None:
     w = (2 * np.pi) / steps
     v = r * w * dt
 
-    m = TextbookNoiselessMotionModel()
+    m = TwistNoiselessMotionModel()
     states = [m.DEFAULT_INITIAL_STATE]
 
     commands = np.ones(shape=(steps, 2)) * (v, w)
