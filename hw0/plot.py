@@ -71,11 +71,38 @@ def plot_trajectory_pretty(
     ax.set_xlim(xmin=xlim[0] - offset[0], xmax=xlim[1] + offset[0])
     ax.set_ylim(ymin=ylim[0] - offset[1], ymax=ylim[1] + offset[1])
 
-    ## Set up the legend
+    ## Plot the ground truth trajectory in a dim color
+    ax.plot(
+        ds.ground_truth["x_m"],
+        ds.ground_truth["y_m"],
+        linewidth=0.49,
+        marker="o",
+        markersize=".5",
+        color="#aaaaff",
+        markerfacecolor="#bbbbff",
+        label="Groundtruth Traj.",
+    )
+
+    ## Plot the predicted trajectory in a brighter color
+    ax.plot(
+        traj["x_m"],
+        traj["y_m"],
+        linewidth=0.49,
+        marker="o",
+        markersize=".5",
+        color="#33bb33",
+        markerfacecolor="#55aa55",
+        label=label,
+    )
+
+    ## Set up the legend & labels
     ax.legend(
         handles=[landmark_proxy] + ax.get_legend_handles_labels()[0],
         labels=["Landmarks"] + ax.get_legend_handles_labels()[1],
     )
+    ax.set_xlabel("x (m)")
+    ax.set_ylabel("y (m)")
+    ax.set_title(f"Ground Truth vs. {label}")
 
     return
 

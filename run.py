@@ -140,7 +140,7 @@ def question_3(ds: Dataset) -> None:
             "orientation_rad": states[:-1:, 2],
         }
     )
-    plot_trajectory_pretty(ds, traj, "Dead-reckoned trajectory from u")
+    plot_trajectory_pretty(ds, traj, "Dead-Reckoned Trajectory")
 
     plt.show()
     return
