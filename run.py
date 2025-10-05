@@ -203,37 +203,43 @@ def question_8b(ds: Dataset) -> None:
     ds = ds.segment_percent(0.0, 0.1, normalize_timestamps=True)
 
     # grab the initial location from the first ground truth value
-    x_0 = ds.ground_truth[["x_m", "y_m", "orientation_rad"]].iloc[0].to_numpy()
+    x_0 = ds.ground_truth[["x_m", "y_m", "orientation_rad"]].to_numpy()[0]
     # and the first timestamp from the controls
-    t_0 = ds.control["time_s"].iloc[0]
+    t_0 = ds.control["time_s"][0]
 
-    states = []
+    # grab the commands
+    u_ts = ds.control["time_s"].to_numpy()
+    u = ds.control[["forward_velocity_mps", "angular_velocity_radps"]].to_numpy()
+    u = u / (10, 1)
+
+    states = [x_0]
     motion = TextbookNoiselessMotionModel(x_0, t_0)
     measure = MeasurementModel(ds.landmarks)
-    pf = ParticleFilter(motion, measure, X_0=x_0)
+    pf = ParticleFilter(motion, measure, x_0)
 
     # simulate the robot's motion
-    for idx in range(len(ds.control)):
-        ctl = ds.control.iloc[idx]
-        ctl["forward_velocity_mps"] /= 10
-        ctl["angular_velocity_radps"] /= 10
-
-        prev_t = pf.get_t()
-        curr_t = ctl["time_s"]
-        not_late = ds.measurement_fix["time_s"] <= curr_t
-        not_early = ds.measurement_fix["time_s"] > prev_t
-        meas = ds.measurement_fix[not_late & not_early]
-        x_t = pf.step(control=ctl, measurements=meas)
-        states.append(x_t)
+    for idx in range(u.shape[0]):
+        # x = motion.step_abs_t(u[idx], u_ts[idx])
+        ctl = pd.Series(
+            {
+                "time_s": u_ts[idx],
+                "x_m": u[idx][0],
+                "y_m": u[idx][1],
+                "orientation_rads": u[idx][1],
+            }
+        )
+        meas = pd.DataFrame()
+        x = pf.step(ctl, meas)
+        states.append(x)
 
     states = np.array(states)
 
     traj = pd.DataFrame(
         {
             "time_s": ds.control["time_s"],
-            "x_m": states[:, 0],
-            "y_m": states[:, 1],
-            "orientation_rad": states[:, 2],
+            "x_m": states[:-1, 0],
+            "y_m": states[:-1:, 1],
+            "orientation_rad": states[:-1:, 2],
         }
     )
     plot_trajectories_pretty(ds, traj, "Dead-Reckoned Trajectory")

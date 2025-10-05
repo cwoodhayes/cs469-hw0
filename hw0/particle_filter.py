@@ -106,21 +106,21 @@ class ParticleFilter:
         #     self._t = new_t
         #     return self._X_t[0]
 
-        m_invalid = (measurements["time_s"] <= self._t) | (
-            measurements["time_s"] > new_t
-        )
-        if any(m_invalid):
-            print("Invalid measurement: ")
-            print(measurements)
-            raise ValueError("measurement timestamps are invalid")
+        # m_invalid = (measurements["time_s"] <= self._t) | (
+        #     measurements["time_s"] > new_t
+        # )
+        # if any(m_invalid):
+        #     print("Invalid measurement: ")
+        #     print(measurements)
+        #     raise ValueError("measurement timestamps are invalid")
 
         # TODO replace with the real filter:
         # just doing dead reckoning for now
         # with particles gaussian-distributed about the dead reckon result
-        cmd = control.to_numpy()[1:]
+        cmd = control[["x_m", "y_m", "orientation_rads"]].to_numpy()
         x = self.motion.step_abs_t(cmd, new_t)
-        self._X_t = np.tile(x, (self._c.n_particles, 1))
-        self._X_t += self._noise.sample()
+        # self._X_t = np.tile(x, (self._c.n_particles, 1))
+        # self._X_t += self._noise.sample()
 
         ## Final updates
         self._t = new_t
