@@ -202,6 +202,7 @@ def question_8b(ds: Dataset) -> None:
 
     # this is for debugging purposes, to grab only a subset of the points
     ds = ds.segment_percent(0.0, 0.1, normalize_timestamps=True)
+    ds.print_info()
 
     # grab the initial location from the first ground truth value
     x_0 = ds.ground_truth[["x_m", "y_m", "orientation_rad"]].iloc[0].to_numpy()

@@ -155,3 +155,32 @@ class Dataset:
         tf = t_start + (pf * range)
 
         return self.segment(t0, tf, normalize_timestamps)
+
+    def print_info(self) -> None:
+        """
+        print some helpful info about the dataset
+        """
+        out = "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+        # measurement & control frequency
+        out += self._fmt_timeseries_info(self.measurement, "measurement")
+        out += self._fmt_timeseries_info(self.control, "control")
+
+        out += "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        print(out)
+
+    @staticmethod
+    def _fmt_timeseries_info(ser: pd.DataFrame, name: str) -> None:
+        out = "\n"
+        n_meas = len(ser)
+        t0_meas = ser["time_s"].iloc[0]
+        tf_meas = ser["time_s"].iloc[1]
+        out += f"{name:_<12} n={n_meas: <4} | t=({t0_meas:.3f}, {tf_meas:.3f})\n"
+
+        # period info
+        periods = ser["time_s"].diff()
+        out += "PERIOD INFO\n"
+        out += str(periods.agg(["mean", "min", "max", "std"]))
+        out += "\n"
+
+        return out
