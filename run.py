@@ -12,7 +12,7 @@ import pandas as pd
 from hw0.data import Dataset
 from hw0.motion import TextbookNoiselessMotionModel
 from hw0.plot import (
-    plot_robot_path,
+    plot_robot_simple,
     plot_z_polar,
     plot_trajectories_pretty,
 )
@@ -26,10 +26,10 @@ def main():
 
     # my assigned dataset is ds1, so I'm hardcoding this
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
-    # circle_test(ds)
-    # question_2(ds)
+    circle_test(ds)
+    question_2(ds)
     question_3(ds)
-    # question_6(ds)
+    question_6(ds)
 
 
 def circle_test(ds: Dataset) -> None:
@@ -54,7 +54,7 @@ def circle_test(ds: Dataset) -> None:
 
     states = np.array(states)
     ax = plt.subplot()
-    plot_robot_path(states, dt, ax)
+    plot_robot_simple(states, ax)
     ax.set_title("Circle Test")
 
     # some quick simple tests
@@ -96,7 +96,7 @@ def question_2(ds: Dataset) -> None:
 
     states = np.array(states)
     fig, ax = plt.subplots(1, 1)
-    plot_robot_path(states, 1.0, ax)
+    plot_robot_simple(states, ax)
     ax.set_title("Q2: Robot path over 5 example commands")
     fig.canvas.manager.set_window_title("question_2")
 
@@ -141,34 +141,6 @@ def question_3(ds: Dataset) -> None:
         }
     )
     plot_trajectories_pretty(ds, traj, "Dead-Reckoned Trajectory")
-
-    plt.show()
-    return
-
-    # plot the result
-    fig, axes = plt.subplots(1, 2)
-    ax_control = axes[0]
-    plot_robot_path(
-        states,
-        u_ts,
-        ax_control,
-        show_orientations=False,
-        show_points=False,
-    )
-    ax_control.set_title("Predicted Path from u")
-
-    # make a plot for the actual ground truth values
-    # the timestamps will be different but the trajectory should still be the same.
-    ax_truth = axes[1]
-    plot_robot_path(
-        ground_truth[["x_m", "y_m", "orientation_rad"]].to_numpy(),
-        ground_truth["time_s"].to_numpy(),
-        ax_truth,
-        show_orientations=True,
-    )
-    ax_truth.set_title("ground truth trajectory")
-    fig.canvas.manager.set_window_title("question_3")
-
     plt.show()
 
 

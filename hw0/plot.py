@@ -94,7 +94,10 @@ def plot_trajectories_pretty(
     ax.legend(
         handles=[landmark_proxy] + ax.get_legend_handles_labels()[0],
         labels=["Landmarks"] + ax.get_legend_handles_labels()[1],
+        loc="center left",
+        bbox_to_anchor=(0.8, 0.95),
     )
+    fig.subplots_adjust(right=0.8)
     ax.set_xlabel("x (m)")
     ax.set_ylabel("y (m)")
     ax.set_title(f"Ground Truth vs. {label}")
@@ -160,12 +163,10 @@ def _plot_trajectory(
     )
 
 
-def plot_robot_path(
+def plot_robot_simple(
     x_all: np.ndarray,
-    dt: float | np.ndarray,
     ax: Axes,
     show_orientations: bool = True,
-    show_points: bool = True,
 ) -> None:
     """
     Plots the path of the robot given a sequence of states & a time interval between them
