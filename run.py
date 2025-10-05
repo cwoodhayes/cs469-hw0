@@ -11,13 +11,14 @@ import pandas as pd
 
 from hw0.data import Dataset
 from hw0.motion import TextbookNoiselessMotionModel
+from hw0.particle_filter import ParticleFilter
 from hw0.plot import (
     plot_robot_simple,
     plot_z_polar,
     plot_trajectories_pretty,
     plot_trajectories_error,
 )
-from hw0.measure import MeasurePredictor
+from hw0.measure import MeasurementModel
 
 REPO_ROOT = pathlib.Path(__file__).parent
 
@@ -33,8 +34,9 @@ def main():
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
     # circle_test(ds)
     # question_2(ds)
-    question_3(ds)
+    # question_3(ds)
     # question_6(ds)
+    question_8b(ds)
 
 
 def circle_test(ds: Dataset) -> None:
@@ -159,7 +161,7 @@ def question_6(ds: Dataset, plot: bool = False) -> None:
         }
     )
 
-    predictor = MeasurePredictor(ds.landmarks)
+    predictor = MeasurementModel(ds.landmarks)
 
     test_data["z"] = test_data["position"].apply(
         lambda row: predictor.z_given_x(np.array(row))
@@ -195,7 +197,49 @@ def question_8b(ds: Dataset) -> None:
     Compare the performance of your motion model (i.e., dead reckoning)
     and your full filter on on the robot dataset (as in step 3).
     """
-    pass
+    print("!!!!!!!!!!!!!!!!!!! QUESTION 8b !!!!!!!!!!!")
+
+    # this is for debugging purposes, to grab only a subset of the points
+    ds = ds.segment_percent(0, 0.1)
+
+    # grab the initial location from the first ground truth value
+    x_0 = ds.ground_truth[["x_m", "y_m", "orientation_rad"]].to_numpy()[0]
+    # and the first timestamp from the controls
+    t_0 = ds.control["time_s"][0]
+
+    states = []
+    motion = TextbookNoiselessMotionModel(x_0, t_0)
+    measure = MeasurementModel(ds.landmarks)
+    pf = ParticleFilter(motion, measure, X_0=x_0)
+
+    # simulate the robot's motion
+    for idx in range(len(ds.control)):
+        ctl_series = control = ds.control.iloc[idx]
+        ctl_series["forward_velocity_mps"] /= 10
+        ctl_series["angular_velocity_radps"] /= 10
+
+        prev_t = pf.get_t()
+        curr_t = ctl_series["time_s"]
+        meas = ds.measurement_fix[
+            (ds.measurement_fix["time_s"] > prev_t)
+            & (ds.measurement_fix["time_s"] <= curr_t)
+        ]
+        x_t = pf.step(control=ctl_series, measurements=meas)
+        states.append(x_t)
+
+    states = np.array(states)
+
+    traj = pd.DataFrame(
+        {
+            "time_s": ds.control["time_s"],
+            "x_m": states[:, 0],
+            "y_m": states[:, 1],
+            "orientation_rad": states[:, 2],
+        }
+    )
+    plot_trajectories_pretty(ds, traj, "Dead-Reckoned Trajectory")
+    # plot_trajectories_error(ds, {"Dead-Reckoned Trajectory": traj})
+    plt.show()
 
 
 if __name__ == "__main__":

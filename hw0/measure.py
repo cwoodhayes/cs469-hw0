@@ -14,7 +14,7 @@ in the same format as landmarks_groundtruth minus stddevs
 """
 
 
-class MeasurePredictor:
+class MeasurementModel:
     """
     Predicts z given a noiseless x
     """
