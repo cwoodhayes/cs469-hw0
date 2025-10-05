@@ -7,9 +7,11 @@ from matplotlib.axes import Axes
 from matplotlib import patches
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sbs
 
 from hw0.data import Dataset
 from hw0.measure import ZType
+from hw0.metrics import abs_trajectory_error, interp2
 
 
 def plot_trajectories_pretty(
@@ -171,6 +173,45 @@ def _plot_trajectory(
         label=f"{label} END",
         zorder=2.5,
     )
+
+
+def plot_trajectories_error(ds: Dataset, trajectories: dict[str, pd.DataFrame]) -> None:
+    """
+    Plot trajectory error over time for multiple trajectories, compared to ground truth
+
+    :param ds: dataset
+    :param trajectories: map of descriptive trajectory names to trajectory dataframes,
+    in the same format as ds.groundtruth
+    """
+    # TODO make error function an argument. for now hardcoding ATE.
+    fig = plt.figure()
+    ax = fig.subplots(1, 1)
+
+    # we're gonna assume here that all trajectories other than groundtruth
+    # are the same length+timestamps. if that's not the case, i've done something
+    # wrong. so let's check it to catch bugs
+    all_lens = [len(traj) for traj in trajectories.values()]
+    if not all(l_ == all_lens[0] for l_ in all_lens):
+        raise ValueError("Trajectories have different numbers of samples.")
+
+    gt, _ = interp2(ds.ground_truth, next(iter(trajectories.values())))
+
+    for name in trajectories:
+        traj = trajectories[name]
+        ate = abs_trajectory_error(gt, traj)
+
+        ax.plot(
+            # use relative time so this is more readable
+            ate["time_s"] - ate["time_s"].iloc[0],
+            ate,
+            linewidth=0.49,
+            label=name,
+        )
+
+    ax.set_ylabel("Absolute Trajectory Error")
+    ax.set_xlabel("Time (s)")
+    ax.set_title("Trajectory Error vs. Ground Truth")
+    ax.legend()
 
 
 def plot_robot_simple(

@@ -4,7 +4,6 @@ Runs a variety of filter exercises specified in CS469's Homework 0
 
 import pathlib
 
-from matplotlib.axes import Axes
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -15,6 +14,7 @@ from hw0.plot import (
     plot_robot_simple,
     plot_z_polar,
     plot_trajectories_pretty,
+    plot_trajectories_error,
 )
 from hw0.measure import MeasurePredictor
 
@@ -26,10 +26,10 @@ def main():
 
     # my assigned dataset is ds1, so I'm hardcoding this
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
-    circle_test(ds)
-    question_2(ds)
+    # circle_test(ds)
+    # question_2(ds)
     question_3(ds)
-    question_6(ds)
+    # question_6(ds)
 
 
 def circle_test(ds: Dataset) -> None:
@@ -141,6 +141,7 @@ def question_3(ds: Dataset) -> None:
         }
     )
     plot_trajectories_pretty(ds, traj, "Dead-Reckoned Trajectory")
+    plot_trajectories_error(ds, {"Dead-Reckoned Trajectory": traj})
     plt.show()
 
 
@@ -186,6 +187,14 @@ def question_6(ds: Dataset, plot: bool = False) -> None:
 
     # fig.canvas.manager.set_window_title("question_6")
     plt.show()
+
+
+def question_8b(ds: Dataset) -> None:
+    """
+    Compare the performance of your motion model (i.e., dead reckoning)
+    and your full filter on on the robot dataset (as in step 3).
+    """
+    pass
 
 
 if __name__ == "__main__":
