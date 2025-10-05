@@ -4,7 +4,7 @@ plotting functions for robot data
 
 import numpy as np
 from matplotlib.axes import Axes
-from matplotlib.patches import Ellipse
+from matplotlib import patches
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -31,8 +31,8 @@ def plot_trajectory_pretty(
     ### plot the landmarks as black discs
     centers = []
     for lm in ds.landmarks.itertuples(index=False):
-        # TODO - make the size view-dependent & not vary
-        oval = Ellipse(
+        # these only actually show up if you zoom wayyyyy in. the stdevs are super small.
+        oval = patches.Ellipse(
             (lm.x_m, lm.y_m),
             width=lm.x_std_dev * 1000,
             height=lm.y_std_dev * 1000,
@@ -43,6 +43,7 @@ def plot_trajectory_pretty(
 
         x, y = oval.center
         centers.append((x, y))
+        # text shows up nicely in black boxes
         ax.text(
             x,
             y,
@@ -51,10 +52,16 @@ def plot_trajectory_pretty(
             va="center",
             fontsize=8,
             color="#ff0055",
-            bbox=dict(facecolor="black", edgecolor="none", boxstyle="round,pad=0.1"),
+            bbox=dict(facecolor="black", edgecolor="#550000", boxstyle="round,pad=0.2"),
         )
 
-    ## ensure that our axes are at least large enough to admit all the landmarks
+    landmark_proxy = patches.Patch(
+        facecolor="black", edgecolor="#550000", label="Landmarks"
+    )
+
+    ## Set up axes limits
+    # they should be consistent, and at least large enough to admit all the landmarks
+    # and reasonable trajectories
     xlim = (min(c[0] for c in centers), max(c[0] for c in centers))
     xrange = xlim[1] - xlim[0]
     ylim = (min(c[1] for c in centers), max(c[1] for c in centers))
@@ -63,6 +70,12 @@ def plot_trajectory_pretty(
 
     ax.set_xlim(xmin=xlim[0] - offset[0], xmax=xlim[1] + offset[0])
     ax.set_ylim(ymin=ylim[0] - offset[1], ymax=ylim[1] + offset[1])
+
+    ## Set up the legend
+    ax.legend(
+        handles=[landmark_proxy] + ax.get_legend_handles_labels()[0],
+        labels=["Landmarks"] + ax.get_legend_handles_labels()[1],
+    )
 
     return
 
