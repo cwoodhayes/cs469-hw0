@@ -200,12 +200,12 @@ def question_8b(ds: Dataset) -> None:
     print("!!!!!!!!!!!!!!!!!!! QUESTION 8b !!!!!!!!!!!")
 
     # this is for debugging purposes, to grab only a subset of the points
-    ds = ds.segment_percent(0, 0.1)
+    ds = ds.segment_percent(0.0, 0.1, normalize_timestamps=True)
 
     # grab the initial location from the first ground truth value
-    x_0 = ds.ground_truth[["x_m", "y_m", "orientation_rad"]].to_numpy()[0]
+    x_0 = ds.ground_truth[["x_m", "y_m", "orientation_rad"]].iloc[0].to_numpy()
     # and the first timestamp from the controls
-    t_0 = ds.control["time_s"][0]
+    t_0 = ds.control["time_s"].iloc[0]
 
     states = []
     motion = TextbookNoiselessMotionModel(x_0, t_0)
@@ -214,17 +214,16 @@ def question_8b(ds: Dataset) -> None:
 
     # simulate the robot's motion
     for idx in range(len(ds.control)):
-        ctl_series = control = ds.control.iloc[idx]
-        ctl_series["forward_velocity_mps"] /= 10
-        ctl_series["angular_velocity_radps"] /= 10
+        ctl = ds.control.iloc[idx]
+        ctl["forward_velocity_mps"] /= 10
+        ctl["angular_velocity_radps"] /= 10
 
         prev_t = pf.get_t()
-        curr_t = ctl_series["time_s"]
-        meas = ds.measurement_fix[
-            (ds.measurement_fix["time_s"] > prev_t)
-            & (ds.measurement_fix["time_s"] <= curr_t)
-        ]
-        x_t = pf.step(control=ctl_series, measurements=meas)
+        curr_t = ctl["time_s"]
+        not_late = ds.measurement_fix["time_s"] <= curr_t
+        not_early = ds.measurement_fix["time_s"] > prev_t
+        meas = ds.measurement_fix[not_late & not_early]
+        x_t = pf.step(control=ctl, measurements=meas)
         states.append(x_t)
 
     states = np.array(states)

@@ -101,10 +101,13 @@ class Dataset:
 
         return cls(barcodes, control, groundtruth, landmark, measurement)
 
-    def segment(self, t0: float, tf: float) -> Dataset:
+    def segment(
+        self, t0: float, tf: float, normalize_timestamps: bool = False
+    ) -> Dataset:
         """
         Make a copy of the dataset where only the timestamps in the range
         [t0, tf) are included
+        Timestamps are normalized to t0 on request
         """
         ds_dict = asdict(self)
         for name in ds_dict:
@@ -116,13 +119,22 @@ class Dataset:
                 continue
 
             print(f"Segmenting {name}...")
-            ds_dict[name] = df[(t0 <= df["time_s"]) & (df["time_s"] < tf)]
+            new_df = (
+                df[(t0 <= df["time_s"]) & (df["time_s"] < tf)]
+                .copy()
+                .reset_index(drop=True)
+            )
+            if normalize_timestamps:
+                new_df["time_s"] -= t0
+            ds_dict[name] = new_df
 
         ds_dict.pop("measurement_fix")
 
         return Dataset(**ds_dict)
 
-    def segment_percent(self, p0: float, pf: float) -> Dataset:
+    def segment_percent(
+        self, p0: float, pf: float, normalize_timestamps: bool = False
+    ) -> Dataset:
         """
         Returns copy of the dataset such that we only include entries in the range
         [p0%, pf%), where both p0 and pf represent percentages of the dataset.
@@ -142,4 +154,4 @@ class Dataset:
         t0 = t_start + (p0 * range)
         tf = t_start + (pf * range)
 
-        return self.segment(t0, tf)
+        return self.segment(t0, tf, normalize_timestamps)

@@ -77,7 +77,7 @@ class ParticleFilter:
             # TODO enable passing parameters in config
             self._noise = GaussianProposalSampler(
                 shape=(config.n_particles, 3),
-                stddev=0.4,
+                stddev=0.002,
             )
         else:
             self._noise = proposal_sampler
@@ -99,11 +99,12 @@ class ParticleFilter:
         if new_t <= self._t:
             raise ValueError("t must increase monotonically")
 
-        if len(measurements) == 0:
-            # TODO figure out what to do here.
-            # for now just skipping these steps entirely.
-            print(f"No measurements for time ({self._t}, {new_t}]")
-            return self._X_t[0]
+        # if len(measurements) == 0:
+        #     # TODO figure out what to do here.
+        #     # for now just
+        #     print(f"No measurements for time ({self._t}, {new_t}]")
+        #     self._t = new_t
+        #     return self._X_t[0]
 
         m_invalid = (measurements["time_s"] <= self._t) | (
             measurements["time_s"] > new_t
@@ -116,8 +117,9 @@ class ParticleFilter:
         # TODO replace with the real filter:
         # just doing dead reckoning for now
         # with particles gaussian-distributed about the dead reckon result
-        x = self.motion.step(control.to_numpy()[1:], new_t - self._t)
-        self._X_t[:, :] = x
+        cmd = control.to_numpy()[1:]
+        x = self.motion.step_abs_t(cmd, new_t)
+        self._X_t = np.tile(x, (self._c.n_particles, 1))
         self._X_t += self._noise.sample()
 
         ## Final updates
@@ -125,7 +127,7 @@ class ParticleFilter:
 
         ## Derive concrete state prediction from particles
         # TODO
-        return self._X_t[0]
+        return x
 
     def get_Xt(self) -> np.ndarray:
         """
