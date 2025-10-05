@@ -2,6 +2,7 @@
 plotting functions for robot data
 """
 
+from matplotlib.figure import Figure
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib import patches
@@ -14,12 +15,48 @@ from hw0.measure import ZType
 from hw0.metrics import abs_trajectory_error, interp2, abs_trajectory_error_rmse
 
 
+def plot_trajectories_and_particles(
+    ds: Dataset,
+    traj: pd.DataFrame,
+    final_particles: np.ndarray,
+    label: str,
+    n_seconds_per_arrow: int = 10,
+) -> None:
+    """
+    Show a map of the environment, with a given predicted trajectory plotted
+    alongside the ground truth trajectory, as well as particles
+    from the final frame of the predicted trajectory
+
+    :param ds: full robot dataset
+    :param traj: predicted robot trajectory, in the same format as ds.groundtruth
+    :param final_particles: particle set from ParticleFilter.get_Xt()
+    :param label: descriptive name for this trajectory
+    """
+    fig, ax = plot_trajectories_pretty(ds, traj, label, n_seconds_per_arrow)
+
+    tf = traj["time_s"].iloc[-1]
+    ax.set_title(f"Ground Truth vs. {label} - Particles @t={tf}")
+
+    # plot particles w/o orientation
+    ax.scatter(
+        x=final_particles[:, 0],
+        y=final_particles[:, 1],
+        marker=".",
+        color="#c4d624",
+        s=10,
+        # behind everything else
+        zorder=0.9,
+        label=f"particles (n={final_particles.shape[0]})",
+    )
+    ax.legend()
+
+
 def plot_trajectories_pretty(
     ds: Dataset,
     traj: pd.DataFrame,
     label: str,
     n_seconds_per_arrow: int = 10,
-) -> None:
+) -> tuple[Figure, Axes]:
     """
     Show a map of the environment, with a given predicted trajectory plotted
     alongside the ground truth trajectory
@@ -106,6 +143,8 @@ def plot_trajectories_pretty(
     ax.set_xlabel("x (m)")
     ax.set_ylabel("y (m)")
     ax.set_title(f"Ground Truth vs. {label}")
+
+    return fig, ax
 
 
 def _plot_trajectory(

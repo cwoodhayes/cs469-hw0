@@ -11,11 +11,12 @@ import pandas as pd
 
 from hw0.data import Dataset
 from hw0.motion import TextbookNoiselessMotionModel
-from hw0.particle_filter import ParticleFilter
+from hw0.particle_filter import GaussianProposalSampler, ParticleFilter
 from hw0.plot import (
     plot_robot_simple,
     plot_z_polar,
     plot_trajectories_pretty,
+    plot_trajectories_and_particles,
     plot_trajectories_error,
 )
 from hw0.measure import MeasurementModel
@@ -211,18 +212,22 @@ def question_8b(ds: Dataset) -> None:
     motion = TextbookNoiselessMotionModel(x_0, t_0)
     measure = MeasurementModel(ds.landmarks)
     pf = ParticleFilter(motion, measure, X_0=x_0)
+
     control = ds.control.copy()
     control["forward_velocity_mps"] /= 10
 
     # simulate the robot's motion
+    # clump together measurements for each control
     for idx in range(len(ds.control)):
         ctl = control.iloc[idx]
 
         prev_t = pf.get_t()
         curr_t = ctl["time_s"]
+
         not_late = ds.measurement_fix["time_s"] <= curr_t
         not_early = ds.measurement_fix["time_s"] > prev_t
         meas = ds.measurement_fix[not_late & not_early]
+
         x_t = pf.step(control=ctl, measurements=meas)
         states.append(x_t)
 
@@ -236,8 +241,8 @@ def question_8b(ds: Dataset) -> None:
             "orientation_rad": states[:, 2],
         }
     )
-    plot_trajectories_pretty(ds, traj, "Dead-Reckoned Trajectory")
-    # plot_trajectories_error(ds, {"Dead-Reckoned Trajectory": traj})
+    plot_trajectories_and_particles(ds, traj, pf.get_Xt(), "Dead-Reckoned Trajectory")
+    plot_trajectories_error(ds, {"Dead-Reckoned Trajectory": traj})
     plt.show()
 
 

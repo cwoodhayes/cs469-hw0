@@ -77,7 +77,7 @@ class ParticleFilter:
             # TODO enable passing parameters in config
             self._noise = GaussianProposalSampler(
                 shape=(config.n_particles, 3),
-                stddev=0.002,
+                stddev=0.1,
             )
         else:
             self._noise = proposal_sampler
