@@ -211,12 +211,12 @@ def question_8b(ds: Dataset) -> None:
     motion = TextbookNoiselessMotionModel(x_0, t_0)
     measure = MeasurementModel(ds.landmarks)
     pf = ParticleFilter(motion, measure, X_0=x_0)
+    control = ds.control.copy()
+    control["forward_velocity_mps"] /= 10
 
     # simulate the robot's motion
     for idx in range(len(ds.control)):
-        ctl = ds.control.iloc[idx]
-        ctl["forward_velocity_mps"] /= 10
-        ctl["angular_velocity_radps"] /= 10
+        ctl = control.iloc[idx]
 
         prev_t = pf.get_t()
         curr_t = ctl["time_s"]
