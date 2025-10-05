@@ -72,9 +72,23 @@ def plot_trajectories_pretty(
     ax.set_ylim(ymin=ylim[0] - offset[1], ymax=ylim[1] + offset[1])
 
     _plot_trajectory(
-        ax, "#bbbbff", "Groundtruth Traj.", ds.ground_truth, n_points_per_arrow=500
+        ax,
+        "Groundtruth Traj.",
+        ds.ground_truth,
+        n_points_per_arrow=500,
+        color="#bbbbff",
+        start_color="#bbffbb",
+        end_color="#ffbbbb",
     )
-    _plot_trajectory(ax, "#33bb33", label, traj, n_points_per_arrow=50)
+    _plot_trajectory(
+        ax,
+        label,
+        traj,
+        n_points_per_arrow=50,
+        color="#5555bb",
+        start_color="#22bb22",
+        end_color="#ff55bb",
+    )
 
     ## Set up the legend & labels
     ax.legend(
@@ -88,9 +102,11 @@ def plot_trajectories_pretty(
 
 def _plot_trajectory(
     ax: Axes,
-    color: str,
     label: str,
     traj: pd.DataFrame,
+    color: str,
+    start_color: str,
+    end_color: str,
     n_points_per_arrow=int,
 ) -> None:
     """
@@ -101,7 +117,6 @@ def _plot_trajectory(
         traj["y_m"],
         linewidth=0.49,
         color=color,
-        label=label,
     )
 
     # plot arrows along the path
@@ -121,6 +136,7 @@ def _plot_trajectory(
         scale_units="width",
         color=color,
         width=0.05,
+        label=label,
     )
 
     # add a start vector and end vector
@@ -129,14 +145,16 @@ def _plot_trajectory(
         traj.iloc[0]["y_m"],
         np.cos(traj.iloc[0]["orientation_rad"]),
         np.sin(traj.iloc[0]["orientation_rad"]),
-        color="#009900",
+        color=start_color,
+        label=f"{label} START",
     )
     ax.quiver(
         traj.iloc[-1]["x_m"],
         traj.iloc[-1]["y_m"],
         np.cos(traj.iloc[-1]["orientation_rad"]),
         np.sin(traj.iloc[-1]["orientation_rad"]),
-        color="#990000",
+        color=end_color,
+        label=f"{label} END",
     )
 
 
