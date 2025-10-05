@@ -248,7 +248,7 @@ def plot_trajectories_error(ds: Dataset, trajectories: dict[str, pd.DataFrame]) 
 
     ax.set_ylabel("Absolute Trajectory Error RMSE (m)")
     ax.set_xlabel("Time (s)")
-    ax.set_title("Trajectory Error vs. Ground Truth")
+    ax.set_title("Cumulative Trajectory Error vs. Ground Truth")
     ax.legend()
 
 
