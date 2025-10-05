@@ -11,7 +11,7 @@ import seaborn as sbs
 
 from hw0.data import Dataset
 from hw0.measure import ZType
-from hw0.metrics import abs_trajectory_error, interp2
+from hw0.metrics import abs_trajectory_error, interp2, abs_trajectory_error_rmse
 
 
 def plot_trajectories_pretty(
@@ -198,17 +198,16 @@ def plot_trajectories_error(ds: Dataset, trajectories: dict[str, pd.DataFrame]) 
 
     for name in trajectories:
         traj = trajectories[name]
-        ate = abs_trajectory_error(gt, traj)
+        ate = abs_trajectory_error_rmse(gt, traj)
 
         ax.plot(
             # use relative time so this is more readable
-            ate["time_s"] - ate["time_s"].iloc[0],
-            ate,
-            linewidth=0.49,
+            ate["time_s"],
+            ate["ATE_RMS"],
             label=name,
         )
 
-    ax.set_ylabel("Absolute Trajectory Error")
+    ax.set_ylabel("Absolute Trajectory Error (RMSE)")
     ax.set_xlabel("Time (s)")
     ax.set_title("Trajectory Error vs. Ground Truth")
     ax.legend()

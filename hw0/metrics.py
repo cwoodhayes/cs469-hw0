@@ -77,3 +77,29 @@ def abs_trajectory_error(
             "ATE": ate,
         }
     )
+
+
+def abs_trajectory_error_rmse(
+    traj1: pd.DataFrame,
+    traj2: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Same as abs_trajectory_error except it uses RMSE rather than just magnitude
+    """
+    if not np.all(traj1["time_s"] == traj2["time_s"]):
+        raise ValueError("Timestamps don't match.")
+
+    x_t1 = traj1[["x_m", "y_m", "orientation_rad"]].to_numpy()
+    x_t2 = traj2[["x_m", "y_m", "orientation_rad"]].to_numpy()
+
+    err = np.linalg.norm(np.abs(x_t1 - x_t2), axis=1) ** 2
+    ate = np.sqrt(np.cumsum(err) / np.arange(1, x_t1.shape[0] + 1))
+
+    # for each timestamp, sum over all prior timestamps
+
+    return pd.DataFrame(
+        {
+            "time_s": traj1["time_s"],
+            "ATE_RMS": ate,
+        }
+    )
