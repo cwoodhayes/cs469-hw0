@@ -16,6 +16,7 @@ def plot_trajectories_pretty(
     ds: Dataset,
     traj: pd.DataFrame,
     label: str,
+    n_seconds_per_arrow: int = 10,
 ) -> None:
     """
     Show a map of the environment, with a given predicted trajectory plotted
@@ -71,11 +72,12 @@ def plot_trajectories_pretty(
     ax.set_xlim(xmin=xlim[0] - offset[0], xmax=xlim[1] + offset[0])
     ax.set_ylim(ymin=ylim[0] - offset[1], ymax=ylim[1] + offset[1])
 
+    ### plot actual trajectories
     _plot_trajectory(
         ax,
         "Groundtruth Traj.",
         ds.ground_truth,
-        n_points_per_arrow=500,
+        n_seconds_per_arrow=n_seconds_per_arrow,
         color="#bbbbff",
         start_color="#3232e4",
         end_color="#393955",
@@ -84,13 +86,14 @@ def plot_trajectories_pretty(
         ax,
         label,
         traj,
-        n_points_per_arrow=50,
+        n_seconds_per_arrow=n_seconds_per_arrow,
         color="#443c23",
         start_color="#1e911a",
         end_color="#7a0e00",
     )
 
     ## Set up the legend & labels
+    ax.plot([], [], " ", label=f"*arrows are {n_seconds_per_arrow}s apart")
     ax.legend(
         handles=[landmark_proxy] + ax.get_legend_handles_labels()[0],
         labels=["Landmarks"] + ax.get_legend_handles_labels()[1],
@@ -110,7 +113,7 @@ def _plot_trajectory(
     color: str,
     start_color: str,
     end_color: str,
-    n_points_per_arrow=int,
+    n_seconds_per_arrow: float,
 ) -> None:
     """
     plots a robot trajectory, with some helpful arrows as it progresses
@@ -122,9 +125,16 @@ def _plot_trajectory(
         color=color,
     )
 
-    # plot arrows along the path
+    ### plot arrows along the path
+
+    # calculate how to distribute our arrows on the trajectory
+    # this is based on the data rate of each, so each arrow represents
+    # that a certain duration has elapsed
+    samples_per_second = len(traj) / (traj.iloc[-1]["time_s"] - traj.iloc[0]["time_s"])
+    samples_per_arrow = int(samples_per_second * n_seconds_per_arrow)
+
     length = 0.2  # in inches
-    arrow_locs = traj.iloc[::n_points_per_arrow]
+    arrow_locs = traj.iloc[::samples_per_arrow]
     dx = np.cos(arrow_locs["orientation_rad"]) * length
     dy = np.sin(arrow_locs["orientation_rad"]) * length
 
