@@ -69,7 +69,7 @@ def plot_trajectories_pretty(
     xrange = xlim[1] - xlim[0]
     ylim = (min(c[1] for c in centers), max(c[1] for c in centers))
     yrange = ylim[1] - xlim[0]
-    offset = (xrange * 0.5, yrange * 0.5)
+    offset = (xrange * 0.8, yrange * 0.8)
 
     ax.set_xlim(xmin=xlim[0] - offset[0], xmax=xlim[1] + offset[0])
     ax.set_ylim(ymin=ylim[0] - offset[1], ymax=ylim[1] + offset[1])

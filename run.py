@@ -3,6 +3,7 @@ Runs a variety of filter exercises specified in CS469's Homework 0
 """
 
 import pathlib
+import signal
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,6 +24,10 @@ REPO_ROOT = pathlib.Path(__file__).parent
 
 def main():
     print("cs469 Homework 1")
+    # make matplotlib responsive to ctrl+c
+    # cite: this stackoverflow answer:
+    # https://stackoverflow.com/questions/67977761/how-to-make-plt-show-responsive-to-ctrl-c
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     # my assigned dataset is ds1, so I'm hardcoding this
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
@@ -107,20 +112,16 @@ def question_3(ds: Dataset) -> None:
     print("!!!!!!!!!!!!!!!!!!! QUESTION 3 !!!!!!!!!!!")
 
     # this is for debugging purposes, to grab only a subset of the points
-    # END_TIME = 1288971999.929
-    END_TIME = 2288973229.039  # way past the end; uncomment to use all points
-    ground_truth = ds.ground_truth[ds.ground_truth["time_s"] < END_TIME]
-    control = ds.control[ds.control["time_s"] < END_TIME]
-    # end debug stuff
+    # ds = ds.segment_percent(0, 0.1)
 
     # grab the initial location from the first ground truth value
-    x_0 = ground_truth[["x_m", "y_m", "orientation_rad"]].to_numpy()[0]
+    x_0 = ds.ground_truth[["x_m", "y_m", "orientation_rad"]].to_numpy()[0]
     # and the first timestamp from the controls
-    t_0 = control["time_s"][0]
+    t_0 = ds.control["time_s"][0]
 
     # grab the commands
-    u_ts = control["time_s"].to_numpy()
-    u = control[["forward_velocity_mps", "angular_velocity_radps"]].to_numpy()
+    u_ts = ds.control["time_s"].to_numpy()
+    u = ds.control[["forward_velocity_mps", "angular_velocity_radps"]].to_numpy()
     u = u / (10, 1)
 
     states = [x_0]
@@ -134,14 +135,14 @@ def question_3(ds: Dataset) -> None:
 
     traj = pd.DataFrame(
         {
-            "time_s": control["time_s"],
+            "time_s": ds.control["time_s"],
             "x_m": states[:-1, 0],
             "y_m": states[:-1:, 1],
             "orientation_rad": states[:-1:, 2],
         }
     )
     plot_trajectories_pretty(ds, traj, "Dead-Reckoned Trajectory")
-    plot_trajectories_error(ds, {"Dead-Reckoned Trajectory": traj})
+    # plot_trajectories_error(ds, {"Dead-Reckoned Trajectory": traj})
     plt.show()
 
 

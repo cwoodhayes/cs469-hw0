@@ -4,7 +4,7 @@ Code for loading in the experimental data
 
 from __future__ import annotations
 
-from dataclasses import InitVar, dataclass, field
+from dataclasses import InitVar, asdict, dataclass, field, fields
 import pathlib
 
 import pandas as pd
@@ -100,3 +100,46 @@ class Dataset:
         )
 
         return cls(barcodes, control, groundtruth, landmark, measurement)
+
+    def segment(self, t0: float, tf: float) -> Dataset:
+        """
+        Make a copy of the dataset where only the timestamps in the range
+        [t0, tf) are included
+        """
+        ds_dict = asdict(self)
+        for name in ds_dict:
+            df: pd.DataFrame = ds_dict[name]
+            if type(df) is not pd.DataFrame:
+                raise NotImplementedError("must add code to handle non-dataframes")
+            if "time_s" not in df.columns:
+                ds_dict[name] = df.copy()
+                continue
+
+            print(f"Segmenting {name}...")
+            ds_dict[name] = df[(t0 <= df["time_s"]) & (df["time_s"] < tf)]
+
+        ds_dict.pop("measurement_fix")
+
+        return Dataset(**ds_dict)
+
+    def segment_percent(self, p0: float, pf: float) -> Dataset:
+        """
+        Returns copy of the dataset such that we only include entries in the range
+        [p0%, pf%), where both p0 and pf represent percentages of the dataset.
+        for instance,
+        - segment_percent(0, 1) gets the whole dataset;
+        - segment_percent (.25, .5) gets the 2nd quantile of timestamped entries
+
+        timestamp ranges are taken from groundtruth and applied to all.
+
+        :param p0: start percent expressed from 0-1
+        :param pf: end percent expressed from 0-1
+        """
+        t_start = self.ground_truth["time_s"].iloc[0]
+        t_end = self.ground_truth["time_s"].iloc[-1]
+        range = t_end - t_start
+
+        t0 = t_start + (p0 * range)
+        tf = t_start + (pf * range)
+
+        return self.segment(t0, tf)
