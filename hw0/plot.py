@@ -6,8 +6,44 @@ import numpy as np
 from matplotlib.axes import Axes
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
+import seaborn.objects as so
 
+from hw0.data import Dataset
 from hw0.measure import ZType
+
+
+def plot_trajectory_pretty(
+    ds: Dataset,
+    traj: pd.DataFrame,
+    label: str,
+) -> None:
+    """
+    Show a map of the environment, with a given predicted trajectory plotted
+    alongside the ground truth trajectory
+
+    :param ds: full robot dataset
+    :param traj: predicted robot trajectory, in the same format as ds.groundtruth
+    :param label: descriptive name for this trajectory
+    """
+    sns.set_theme(style="darkgrid")
+
+    ds.ground_truth["series"] = "groundtruth"
+    traj["series"] = "traj"
+
+    df = pd.concat([ds.ground_truth, traj])
+
+    p = so.Plot(ds.ground_truth, x="x_m", y="y_m")
+    p.add(so.Path())
+    p.show()
+
+    # sns.lineplot(
+    #     data=traj,
+    #     sort=False,
+    #     x="x_m",
+    #     y="y_m",
+    #     # hue="series",
+    # )
 
 
 def plot_robot_path(
