@@ -22,7 +22,7 @@ class Dataset:
     barcodes: pd.DataFrame
     control: pd.DataFrame
     ground_truth: pd.DataFrame
-    landmark_ground_truth: pd.DataFrame
+    landmarks: pd.DataFrame
     measurement: pd.DataFrame
 
     # measurement file, but using the landmark ground truth

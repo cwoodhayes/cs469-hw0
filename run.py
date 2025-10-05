@@ -11,7 +11,11 @@ import pandas as pd
 
 from hw0.data import Dataset
 from hw0.motion import TextbookNoiselessMotionModel
-from hw0.plot import plot_robot_path, plot_z_and_landmarks, plot_z_polar
+from hw0.plot import (
+    plot_robot_path,
+    plot_z_polar,
+    plot_trajectory_pretty,
+)
 from hw0.measure import MeasurePredictor
 
 REPO_ROOT = pathlib.Path(__file__).parent
@@ -23,9 +27,9 @@ def main():
     # my assigned dataset is ds1, so I'm hardcoding this
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
     # circle_test(ds)
-    question_2(ds)
+    # question_2(ds)
     question_3(ds)
-    question_6(ds)
+    # question_6(ds)
 
 
 def circle_test(ds: Dataset) -> None:
@@ -126,8 +130,22 @@ def question_3(ds: Dataset) -> None:
     for idx in range(u.shape[0]):
         states.append(m.step_abs_t(u[idx], u_ts[idx]))
 
-    # plot the result
     states = np.array(states)
+
+    traj = pd.DataFrame(
+        {
+            "time_s": control["time_s"],
+            "x_m": states[:-1, 0],
+            "y_m": states[:-1:, 1],
+            "orientation_rad": states[:-1:, 2],
+        }
+    )
+    plot_trajectory_pretty(ds, traj, "Dead-reckoned trajectory from u")
+
+    plt.show()
+    return
+
+    # plot the result
     fig, axes = plt.subplots(1, 2)
     ax_control = axes[0]
     plot_robot_path(
@@ -167,7 +185,7 @@ def question_6(ds: Dataset, plot: bool = False) -> None:
         }
     )
 
-    predictor = MeasurePredictor(ds.landmark_ground_truth)
+    predictor = MeasurePredictor(ds.landmarks)
 
     test_data["z"] = test_data["position"].apply(
         lambda row: predictor.z_given_x(np.array(row))

@@ -4,10 +4,93 @@ plotting functions for robot data
 
 import numpy as np
 from matplotlib.axes import Axes
+from matplotlib.patches import Ellipse
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from hw0.data import Dataset
 from hw0.measure import ZType
+
+
+def plot_trajectory_pretty(
+    ds: Dataset,
+    traj: pd.DataFrame,
+    label: str,
+) -> None:
+    """
+    Show a map of the environment, with a given predicted trajectory plotted
+    alongside the ground truth trajectory
+
+    :param ds: full robot dataset
+    :param traj: predicted robot trajectory, in the same format as ds.groundtruth
+    :param label: descriptive name for this trajectory
+    """
+    fig = plt.figure()
+    ax = fig.subplots()
+
+    ### plot the landmarks as black discs
+    centers = []
+    for lm in ds.landmarks.itertuples(index=False):
+        # TODO - make the size view-dependent & not vary
+        oval = Ellipse(
+            (lm.x_m, lm.y_m),
+            width=lm.x_std_dev * 1000,
+            height=lm.y_std_dev * 1000,
+            facecolor="black",
+            lw=0.5,
+        )
+        ax.add_patch(oval)
+
+        x, y = oval.center
+        centers.append((x, y))
+        ax.text(
+            x,
+            y,
+            f"{lm.subject}",
+            ha="center",
+            va="center",
+            fontsize=8,
+            color="#ff0055",
+            bbox=dict(facecolor="black", edgecolor="none", boxstyle="round,pad=0.1"),
+        )
+
+    ## ensure that our axes are at least large enough to admit all the landmarks
+    xlim = (min(c[0] for c in centers), max(c[0] for c in centers))
+    xrange = xlim[1] - xlim[0]
+    ylim = (min(c[1] for c in centers), max(c[1] for c in centers))
+    yrange = ylim[1] - xlim[0]
+    offset = (xrange * 0.5, yrange * 0.5)
+
+    ax.set_xlim(xmin=xlim[0] - offset[0], xmax=xlim[1] + offset[0])
+    ax.set_ylim(ymin=ylim[0] - offset[1], ymax=ylim[1] + offset[1])
+
+    return
+
+    # add nice dots for the endpoints
+    ax.plot(
+        x_all[0, 0],
+        x_all[0, 1],
+        marker="o",
+        markersize=10,
+        color="#00bf00",
+    )
+    ax.plot(
+        x_all[-1, 0],
+        x_all[-1, 1],
+        marker="o",
+        markersize=10,
+        color="#bf0000",
+    )
+
+    # plot each robot location
+    ax.plot(
+        x_all[:, 0],
+        x_all[:, 1],
+        linestyle="-",
+        marker=".",
+        linewidth=1,
+        color="black",
+    )
 
 
 def plot_robot_path(
