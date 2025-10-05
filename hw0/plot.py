@@ -77,17 +77,17 @@ def plot_trajectories_pretty(
         ds.ground_truth,
         n_points_per_arrow=500,
         color="#bbbbff",
-        start_color="#bbffbb",
-        end_color="#ffbbbb",
+        start_color="#3232e4",
+        end_color="#393955",
     )
     _plot_trajectory(
         ax,
         label,
         traj,
         n_points_per_arrow=50,
-        color="#5555bb",
-        start_color="#22bb22",
-        end_color="#ff55bb",
+        color="#443c23",
+        start_color="#1e911a",
+        end_color="#7a0e00",
     )
 
     ## Set up the legend & labels
@@ -147,6 +147,7 @@ def _plot_trajectory(
         np.sin(traj.iloc[0]["orientation_rad"]),
         color=start_color,
         label=f"{label} START",
+        zorder=2.5,
     )
     ax.quiver(
         traj.iloc[-1]["x_m"],
@@ -155,6 +156,7 @@ def _plot_trajectory(
         np.sin(traj.iloc[-1]["orientation_rad"]),
         color=end_color,
         label=f"{label} END",
+        zorder=2.5,
     )
 
 
