@@ -12,7 +12,7 @@ from hw0.data import Dataset
 from hw0.measure import ZType
 
 
-def plot_trajectory_pretty(
+def plot_trajectories_pretty(
     ds: Dataset,
     traj: pd.DataFrame,
     label: str,
@@ -71,29 +71,10 @@ def plot_trajectory_pretty(
     ax.set_xlim(xmin=xlim[0] - offset[0], xmax=xlim[1] + offset[0])
     ax.set_ylim(ymin=ylim[0] - offset[1], ymax=ylim[1] + offset[1])
 
-    ## Plot the ground truth trajectory in a dim color
-    ax.plot(
-        ds.ground_truth["x_m"],
-        ds.ground_truth["y_m"],
-        linewidth=0.49,
-        marker="o",
-        markersize=".5",
-        color="#aaaaff",
-        markerfacecolor="#bbbbff",
-        label="Groundtruth Traj.",
+    _plot_trajectory(
+        ax, "#bbbbff", "Groundtruth Traj.", ds.ground_truth, n_points_per_arrow=500
     )
-
-    ## Plot the predicted trajectory in a brighter color
-    ax.plot(
-        traj["x_m"],
-        traj["y_m"],
-        linewidth=0.49,
-        marker="o",
-        markersize=".5",
-        color="#33bb33",
-        markerfacecolor="#55aa55",
-        label=label,
-    )
+    _plot_trajectory(ax, "#33bb33", label, traj, n_points_per_arrow=50)
 
     ## Set up the legend & labels
     ax.legend(
@@ -104,32 +85,58 @@ def plot_trajectory_pretty(
     ax.set_ylabel("y (m)")
     ax.set_title(f"Ground Truth vs. {label}")
 
-    return
 
-    # add nice dots for the endpoints
+def _plot_trajectory(
+    ax: Axes,
+    color: str,
+    label: str,
+    traj: pd.DataFrame,
+    n_points_per_arrow=int,
+) -> None:
+    """
+    plots a robot trajectory, with some helpful arrows as it progresses
+    """
     ax.plot(
-        x_all[0, 0],
-        x_all[0, 1],
-        marker="o",
-        markersize=10,
-        color="#00bf00",
-    )
-    ax.plot(
-        x_all[-1, 0],
-        x_all[-1, 1],
-        marker="o",
-        markersize=10,
-        color="#bf0000",
+        traj["x_m"],
+        traj["y_m"],
+        linewidth=0.49,
+        color=color,
+        label=label,
     )
 
-    # plot each robot location
-    ax.plot(
-        x_all[:, 0],
-        x_all[:, 1],
-        linestyle="-",
-        marker=".",
-        linewidth=1,
-        color="black",
+    # plot arrows along the path
+    length = 0.2  # in inches
+    arrow_locs = traj.iloc[::n_points_per_arrow]
+    dx = np.cos(arrow_locs["orientation_rad"]) * length
+    dy = np.sin(arrow_locs["orientation_rad"]) * length
+
+    ax.quiver(
+        arrow_locs["x_m"],
+        arrow_locs["y_m"],
+        dx,
+        dy,
+        units="inches",
+        angles="xy",
+        scale=10,
+        scale_units="width",
+        color=color,
+        width=0.05,
+    )
+
+    # add a start vector and end vector
+    ax.quiver(
+        traj.iloc[0]["x_m"],
+        traj.iloc[0]["y_m"],
+        np.cos(traj.iloc[0]["orientation_rad"]),
+        np.sin(traj.iloc[0]["orientation_rad"]),
+        color="#009900",
+    )
+    ax.quiver(
+        traj.iloc[-1]["x_m"],
+        traj.iloc[-1]["y_m"],
+        np.cos(traj.iloc[-1]["orientation_rad"]),
+        np.sin(traj.iloc[-1]["orientation_rad"]),
+        color="#990000",
     )
 
 

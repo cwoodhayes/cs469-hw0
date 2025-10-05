@@ -14,7 +14,7 @@ from hw0.motion import TextbookNoiselessMotionModel
 from hw0.plot import (
     plot_robot_path,
     plot_z_polar,
-    plot_trajectory_pretty,
+    plot_trajectories_pretty,
 )
 from hw0.measure import MeasurePredictor
 
@@ -140,7 +140,7 @@ def question_3(ds: Dataset) -> None:
             "orientation_rad": states[:-1:, 2],
         }
     )
-    plot_trajectory_pretty(ds, traj, "Dead-Reckoned Trajectory")
+    plot_trajectories_pretty(ds, traj, "Dead-Reckoned Trajectory")
 
     plt.show()
     return
