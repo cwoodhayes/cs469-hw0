@@ -5,6 +5,7 @@ Measurement estimation
 import numpy as np
 import pandas as pd
 from scipy.linalg import expm
+from scipy.stats import multivariate_normal
 
 
 ZType = pd.DataFrame
@@ -37,9 +38,6 @@ class MeasurementModel:
         """
         self._landmarks = landmarks
         self._cov = cov_matrix
-
-        self._cov_inv = np.linalg.inv(self._cov)
-        self._det_cov = np.linalg.det(self._cov)
 
         # a more efficient representation for fast accesses
         lmdict = dict()
@@ -133,18 +131,7 @@ class MeasurementModel:
         z_pred = self.z_given_x_by_landmark(x, z_actual[1])
 
         z = np.array([z_actual[2], z_actual[3]])
-        # 2x1 residual
-        err = z - z_pred
 
-        # n = len(z)
-
-        # # Gaussian likelihood
-        # exp_term = -0.5 * (err @ self._cov_inv @ err.T)
-        # norm_const = 1.0 / np.sqrt((2 * np.pi) ** n * self._det_cov)
-        # p = norm_const * np.exp(exp_term)
-
-        # Flatten out (err @ cov_inv @ err.T) gives [[scalar]]
-        # return float(p)
-
-        # silly dumn euclidian norm
-        return 1 / np.linalg.norm(err)
+        dist = multivariate_normal(mean=z_pred, cov=self._cov)
+        p = dist.pdf(z) / dist.pdf(z_pred)
+        return p
