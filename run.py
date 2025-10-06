@@ -162,7 +162,7 @@ def question_6(ds: Dataset, plot: bool = False) -> None:
         print(f" -- bearing : {z_mark['bearing_rad'].item():.3} radians")
         print(f" -- range: {z_mark['range_m'].item():.3} meters")
 
-        print(f" -- BY_LANDMARK: {row['z_by_landmark']}")
+        print(f" -- BY_LANDMARK: {row['z_by_landmark'].round(2)}")
 
     # fig.canvas.manager.set_window_title("question_6")
     plt.show()

@@ -22,6 +22,12 @@ class MeasurementModel:
     def __init__(self, landmarks: pd.DataFrame):
         self._landmarks = landmarks
 
+        # a more efficient representation for fast accesses
+        lmdict = dict()
+        for lm in self._landmarks.itertuples():
+            lmdict[lm.subject] = np.array([lm.x_m, lm.y_m])
+        self._lmdict = lmdict
+
     def z_given_x(self, x: np.ndarray) -> ZType:
         """
         Returns measurements z given current state x
@@ -66,30 +72,43 @@ class MeasurementModel:
 
     def z_given_x_by_landmark(self, x: np.ndarray, subject: int) -> np.ndarray:
         """
+        More efficient function that just gets the measurement for a single landmark
 
-
-        :param self: Description
         :param x: current state
         :type x: np.ndarray [x, y, theta]
         :param subject: subject number, per ds.measurements_fix
         :return: observation z for subject
         :rtype: ndarray [range_m, bearing_rad]
         """
-        z_all = self.z_given_x(x)
-        z = z_all[z_all["subject"] == subject].to_numpy()
-        return z
+        # get vector pointing from robot to landmark
+        p_landmark = self._lmdict[subject]
+        r_vec = p_landmark - x[0:2]
+        r = np.linalg.norm(r_vec)
 
-    def probability_z(self, z_predicted: ZType, z_actual: tuple) -> float:
+        # get unit vector of robot's POV
+        robot_pov_vec = np.array((np.cos(x[2]), np.sin(x[2])))
+
+        # get angle between robot POV and the robot->landmark vector
+        cos_theta = robot_pov_vec.dot(r_vec) / r
+        theta = np.arccos(cos_theta)
+        # arccos always evaluates to theta <= pi radians; we need to
+        # catch pi<theta<=2pi ourselves
+        # can use the cross product here
+        if np.cross(robot_pov_vec, r_vec) < 0:
+            theta = -theta
+
+        return np.array([r, theta])
+
+    def probability_z_given_x(self, x: np.ndarray, z_actual: tuple) -> float:
         """
         Evaluates probability of observing z_actual, given state x
-        (indirectly, through the predicted measurements from z_given_x())
 
         Uses Gaussian likelihood
 
-        :param z_predicted: output from z_given_x()
+        :param x: [x_m, y_m, orientation_rad]
         :param z_actual: actual observation z
         :type z_actual: tuple of (time_s, subject #, range_m, bearing_rad)
         :return: probability 0-1
         """
         # TODO fill in
-        return 1
+        return 1.0
