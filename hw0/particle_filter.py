@@ -44,6 +44,7 @@ class ParticleFilter:
         n_particles: int = 1000
         proposal_distribution: Literal["gaussian", "uniform"] = "gaussian"
         output_selection: Literal["weighted_mean"] = "weighted_mean"
+        random_seed: int | None = None
 
     DEFAULT_CONFIG = Config()
 

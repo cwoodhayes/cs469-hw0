@@ -35,9 +35,9 @@ def main():
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
     # circle_test(ds)
     # question_2(ds)
-    # question_3(ds)
+    question_3(ds)
     # question_6(ds)
-    question_8b(ds)
+    # question_8b(ds)
 
 
 def circle_test(ds: Dataset) -> None:
@@ -212,13 +212,18 @@ def question_8b(ds: Dataset) -> None:
     states = []
     motion = TextbookNoiselessMotionModel(x_0, t_0)
     measure = MeasurementModel(ds.landmarks)
-    pf = ParticleFilter(motion, measure, X_0=x_0)
+
+    pf_config = ParticleFilter.Config(
+        random_seed=0,
+    )
+    pf = ParticleFilter(motion, measure, X_0=x_0, config=pf_config)
 
     control = ds.control.copy()
     control["forward_velocity_mps"] /= 10
 
     # simulate the robot's motion
     # clump together measurements for each control
+    print("Simulating...")
     for idx in range(len(ds.control)):
         ctl = control.iloc[idx]
 
@@ -232,6 +237,7 @@ def question_8b(ds: Dataset) -> None:
         x_t = pf.step(control=ctl, measurements=meas)
         states.append(x_t)
 
+    print("Done simulating. Plotting...")
     states = np.array(states)
 
     traj = pd.DataFrame(
