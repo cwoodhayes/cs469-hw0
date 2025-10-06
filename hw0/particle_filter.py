@@ -72,7 +72,8 @@ class ParticleFilter:
         self,
         motion_model: NoiselessMotionModelBase,
         measurement_model: MeasurementModel,
-        proposal_sampler: ProposalSamplerBase,
+        u_noise: ProposalSamplerBase,
+        z_noise: ProposalSamplerBase,
         X_0: np.ndarray | None,
         config: Config = DEFAULT_CONFIG,
     ):
@@ -80,14 +81,18 @@ class ParticleFilter:
         :param motion_model: dynamics model for the robot
         :param measurement_model: measurement model for the robot
         :param X_0: initial particle set, or a single known initial state
-        :param proposal_sampler: noise generator
+        :param u_noise: probability distribution for controls
+        :param z_noise: probability distribution for measurements
         :param config: filter configuration object
         """
         self.motion = motion_model
         self.measure = measurement_model
         self._c = config
-        self._noise = proposal_sampler
-        self._noise.set_shape((config.n_particles, 3))
+
+        u_noise.set_shape((config.n_particles, 3))
+        self._u_noise = u_noise
+        z_noise.set_shape((config.n_particles, 3))
+        self._z_noise = z_noise
 
         ## input checking
         if not (X_0.shape == (config.n_particles, 3) or X_0.shape == (3,)):
@@ -123,7 +128,7 @@ class ParticleFilter:
         Xbar_t = np.empty(shape=(self._c.n_particles, 3))
         W_t = np.empty(shape=(self._c.n_particles,))  # particle weights for Xbar_t
         u_t = control.to_numpy()[1:]
-        X_noise_t = self._noise.sample()
+        X_noise_t = self._u_noise.sample()
 
         ## CONTROL + MEASUREMENT UPDATE STEP
         for idx in range(self._c.n_particles):
@@ -139,9 +144,13 @@ class ParticleFilter:
             ## weight the particle by p(z_t | x_t)
 
             # since we can have multiple measurements for one control, we
-            # do this in a loop, such that we sum our probilities together.
-            # TODO
+            # do this in a loop, such that we evaluate the likelihood of all
+            # these observations co-occurring for this particle
+            # z_predicted = self.measure.z_given_x(x=x_t)
             w_t = 1.0
+            # for msr in measurements.itertuples():
+            #     p_z = self.measure.probability_z(z_predicted, msr)
+            #     w_t *= p_z
 
             ## add this particle+weight (x_t, w_t) to Xbar_t
             Xbar_t[idx] = x_t
@@ -193,7 +202,7 @@ class ParticleFilter:
         Xbar_t = []
         M = X_t.shape[0]
 
-        r = self._noise.rng.uniform(0, 1 / M)
+        r = self._u_noise.rng.uniform(0, 1 / M)
         c = W_t[0]
         i_ = 0
         for m in range(M):

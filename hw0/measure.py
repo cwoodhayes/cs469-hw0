@@ -63,3 +63,33 @@ class MeasurementModel:
             z.loc[idx, "bearing_rad"] = theta
 
         return z
+
+    def z_given_x_by_landmark(self, x: np.ndarray, subject: int) -> np.ndarray:
+        """
+
+
+        :param self: Description
+        :param x: current state
+        :type x: np.ndarray [x, y, theta]
+        :param subject: subject number, per ds.measurements_fix
+        :return: observation z for subject
+        :rtype: ndarray [range_m, bearing_rad]
+        """
+        z_all = self.z_given_x(x)
+        z = z_all[z_all["subject"] == subject].to_numpy()
+        return z
+
+    def probability_z(self, z_predicted: ZType, z_actual: tuple) -> float:
+        """
+        Evaluates probability of observing z_actual, given state x
+        (indirectly, through the predicted measurements from z_given_x())
+
+        Uses Gaussian likelihood
+
+        :param z_predicted: output from z_given_x()
+        :param z_actual: actual observation z
+        :type z_actual: tuple of (time_s, subject #, range_m, bearing_rad)
+        :return: probability 0-1
+        """
+        # TODO fill in
+        return 1

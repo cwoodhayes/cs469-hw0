@@ -37,8 +37,8 @@ def main():
     # circle_test(ds)
     # question_2(ds)
     # question_3(ds)
-    # question_6(ds)
-    question_8b(ds)
+    question_6(ds)
+    # question_8b(ds)
 
 
 def question_2(ds: Dataset) -> None:
@@ -134,6 +134,12 @@ def question_6(ds: Dataset, plot: bool = False) -> None:
     test_data["z"] = test_data["position"].apply(
         lambda row: predictor.z_given_x(np.array(row))
     )
+    test_data["z_by_landmark"] = test_data.apply(
+        lambda row: predictor.z_given_x_by_landmark(
+            x=row["position"], subject=row["landmark"]
+        ),
+        axis=1,
+    )
 
     # fig, axes = plt.subplots(1, 3)
 
@@ -155,6 +161,8 @@ def question_6(ds: Dataset, plot: bool = False) -> None:
         print(f"PREDICTION for landmark {row['landmark']}, x={row['position']}:")
         print(f" -- bearing : {z_mark['bearing_rad'].item():.3} radians")
         print(f" -- range: {z_mark['range_m'].item():.3} meters")
+
+        print(f" -- BY_LANDMARK: {row['z_by_landmark']}")
 
     # fig.canvas.manager.set_window_title("question_6")
     plt.show()
@@ -179,12 +187,18 @@ def question_8b(ds: Dataset) -> None:
     states = []
     motion = TextbookMotionModel()
     measure = MeasurementModel(ds.landmarks)
-    noise = GaussianProposalSampler(stddev=0.005)
+    u_noise = GaussianProposalSampler(stddev=0.005)
+    z_noise = GaussianProposalSampler(stddev=0.005)
     pf_config = ParticleFilter.Config(
         random_seed=0,
     )
     pf = ParticleFilter(
-        motion, measure, X_0=x_0, config=pf_config, proposal_sampler=noise
+        motion,
+        measure,
+        X_0=x_0,
+        config=pf_config,
+        u_noise=u_noise,
+        z_noise=z_noise,
     )
 
     # simulate the robot's motion
