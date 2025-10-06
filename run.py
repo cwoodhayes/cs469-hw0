@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from hw0.data import Dataset
-from hw0.motion import TextbookNoiselessMotionModel
+from hw0.motion import TextbookMotionModel
 from hw0.particle_filter import GaussianProposalSampler, ParticleFilter
 from hw0.plot import (
     plot_robot_simple,
@@ -20,6 +20,7 @@ from hw0.plot import (
     plot_trajectories_error,
 )
 from hw0.measure import MeasurementModel
+from hw0.integration_tests import circle_test
 
 REPO_ROOT = pathlib.Path(__file__).parent
 
@@ -33,60 +34,16 @@ def main():
 
     # my assigned dataset is ds1, so I'm hardcoding this
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
-    # circle_test(ds)
-    # question_2(ds)
+    circle_test(ds)
+    question_2(ds)
     # question_3(ds)
     # question_6(ds)
-    question_8b(ds)
-
-
-def circle_test(ds: Dataset) -> None:
-    # test for my own reassurance.
-    # make the robot go in a big circle. should do it exactly once
-
-    r = 10  # radius
-    steps = 50  # number of steps to trace the circle
-    dt = 1
-
-    w = (2 * np.pi) / steps
-    v = r * w * dt
-
-    m = TextbookNoiselessMotionModel()
-    states = [m.DEFAULT_INITIAL_STATE]
-
-    commands = np.ones(shape=(steps, 2)) * (v, w)
-    print(commands)
-
-    for idx in range(commands.shape[0]):
-        states.append(m.step(commands[idx], dt))
-
-    states = np.array(states)
-    ax = plt.subplot()
-    plot_robot_simple(states, ax)
-    ax.set_title("Circle Test")
-
-    # some quick simple tests
-    expected_angles = np.linspace(0, 2 * np.pi, steps)
-    print("\nangles")
-    print(states[:, 2].round(2))
-    print("\n expected angles")
-    print(expected_angles.round(2))
-
-    # check that the lengths of all the segments are the same
-    rotated = np.zeros_like(states)
-    rotated[0, :] = states[-1, :]
-    rotated[1:, :] = states[:-1, :]
-    diffs = states[:, 0:2] - rotated[:, 0:2]
-    distances = np.linalg.norm(diffs, axis=1)
-    print("\ndistances (should b same)")
-    print(np.round(distances, decimals=1))
-
-    plt.show()
+    # question_8b(ds)
 
 
 def question_2(ds: Dataset) -> None:
     print("!!!!!!!!!!!!!!!!!!! QUESTION 2 !!!!!!!!!!!")
-    m = TextbookNoiselessMotionModel()
+    m = TextbookMotionModel()
 
     commands = np.array(
         (
@@ -97,10 +54,14 @@ def question_2(ds: Dataset) -> None:
             (0.5, 0),
         )
     )
-    states = [m.DEFAULT_INITIAL_STATE]
+    states = []
 
+    x_prev = np.array([0.0, 0.0, 0.0])
     for idx in range(commands.shape[0]):
-        states.append(m.step(commands[idx], 1.0))
+        states.append(x_prev)
+        x_t = m.step(commands[idx], x_prev, 1.0)
+        x_prev = x_t
+    states.append(x_prev)
 
     states = np.array(states)
     fig, ax = plt.subplots(1, 1)
@@ -128,7 +89,7 @@ def question_3(ds: Dataset) -> None:
     u = u / (10, 1)
 
     states = [x_0]
-    m = TextbookNoiselessMotionModel(x_0, t_0)
+    m = TextbookMotionModel(x_0, t_0)
 
     # simulate the robot's motion
     for idx in range(u.shape[0]):
@@ -210,7 +171,7 @@ def question_8b(ds: Dataset) -> None:
     t_0 = ds.control["time_s"].iloc[0]
 
     states = []
-    motion = TextbookNoiselessMotionModel(x_0, t_0)
+    motion = TextbookMotionModel(x_0, t_0)
     measure = MeasurementModel(ds.landmarks)
     noise = GaussianProposalSampler(stddev=0.005)
     pf_config = ParticleFilter.Config(
