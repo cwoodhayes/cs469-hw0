@@ -18,6 +18,7 @@ from hw0.plot import (
     plot_trajectories_pretty,
     plot_trajectories_and_particles,
     plot_trajectories_error,
+    plot_weights_stddev,
 )
 from hw0.measure import MeasurementModel
 from hw0.integration_tests import circle_test
@@ -37,7 +38,7 @@ def main():
     # circle_test(ds)
     # question_2(ds)
     # question_3(ds)
-    question_6(ds)
+    # question_6(ds)
     question_8b(ds)
 
 
@@ -148,8 +149,6 @@ def question_8b(ds: Dataset) -> None:
 
     # grab the initial location from the first ground truth value
     x_0 = ds.ground_truth[["x_m", "y_m", "orientation_rad"]].iloc[0].to_numpy()
-    # and the first timestamp from the controls
-    t_0 = ds.control["time_s"].iloc[0]
 
     states = []
     motion = TextbookMotionModel()
@@ -157,13 +156,14 @@ def question_8b(ds: Dataset) -> None:
         ds.landmarks,
         cov_matrix=np.array(
             [
-                [0.05, 0.05],
-                [0.05, 0.05],
+                [0.5, 0.5],
+                [0.5, 0.5],
             ]
-        ),
+        )
+        / 10000,
     )
     u_noise = GaussianProposalSampler(
-        stddev=0.005,
+        stddev=0.05,
     )
     pf_config = ParticleFilter.Config(
         random_seed=0,
@@ -230,9 +230,10 @@ def question_8b(ds: Dataset) -> None:
     plot_trajectories_and_particles(
         ds,
         traj,
-        pf.get_Xt(),
+        pf.debug_X_t_last_with_weights,
         "PF Trajectory",
         traj2=(dr_traj, "DR Trajectory"),
+        final_Xbar_t=pf.debug_Xbar_t_last_with_weights,
     )
     plot_trajectories_error(
         ds,
@@ -241,6 +242,8 @@ def question_8b(ds: Dataset) -> None:
             "DR Trajectory": dr_traj,
         },
     )
+    weights = np.array(pf.debug_weights_stddev)
+    plot_weights_stddev(weights[:, 0], weights[:, 1])
     plt.show()
 
 

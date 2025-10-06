@@ -102,6 +102,12 @@ class ParticleFilter:
         self._X_t[:, :] = X_0
         # """each particle is (x_m, y_m, orientation_rads)"""
 
+        ## DEBUGGING VARIABLES
+        self.debug_X_t_last_with_weights = None
+        self.debug_Xbar_t_last_with_weights = None
+        self.debug_weights_stddev: list[tuple[float, float]] = []
+        # list of (timestamp, particle weights stddev)
+
     def step(
         self, control: pd.Series, measurements: pd.DataFrame, dt: float
     ) -> np.ndarray:
@@ -160,6 +166,13 @@ class ParticleFilter:
         ## Final updates
         self._X_t = X_t
 
+        # debugging variables
+        t_ = control["time_s"]
+        if W_t.std() > 0:
+            self.debug_X_t_last_with_weights = X_t
+            self.debug_Xbar_t_last_with_weights = Xbar_t
+        self.debug_weights_stddev.append((t_, W_t.std()))
+
         ## Derive concrete state prediction from particles
         match self._c.output_selection:
             case "weighted_mean":
@@ -213,7 +226,7 @@ class ParticleFilter:
         """
         Return the current particle set X_t, as determined by the most recent call of step()
 
-        :return: particle set
+        :return: (resampled belief particle set X_t, proposal particle set Xbar_t]
         :rtype: [(x_m, y_m, orientation_rad), (...), ...]
         """
         return self._X_t

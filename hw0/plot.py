@@ -18,10 +18,11 @@ from hw0.metrics import abs_trajectory_error, interp2, abs_trajectory_error_rmse
 def plot_trajectories_and_particles(
     ds: Dataset,
     traj: pd.DataFrame,
-    final_particles: np.ndarray,
+    final_Xt: np.ndarray,
     label: str,
     n_seconds_per_arrow: int = 10,
     traj2: tuple[pd.DataFrame, str] = None,
+    final_Xbar_t: np.ndarray | None = None,
 ) -> None:
     """
     Show a map of the environment, with a given predicted trajectory plotted
@@ -44,15 +45,27 @@ def plot_trajectories_and_particles(
 
     # plot particles w/o orientation
     ax.scatter(
-        x=final_particles[:, 0],
-        y=final_particles[:, 1],
+        x=final_Xt[:, 0],
+        y=final_Xt[:, 1],
         marker=".",
-        color="#c4d624",
+        color="#673aa3",
         s=10,
         # behind everything else
         zorder=0.9,
-        label=f"particles (n={final_particles.shape[0]})",
+        label=f"X_t (belief particles) (n={final_Xt.shape[0]})",
     )
+
+    if final_Xbar_t is not None:
+        ax.scatter(
+            x=final_Xt[:, 0],
+            y=final_Xt[:, 1],
+            marker=".",
+            color="#b9c92d",
+            s=100,
+            # behind everything else
+            zorder=0.8,
+            label=f"Xbar_t (proposal particles) (n={final_Xbar_t.shape[0]})",
+        )
     ax.legend()
 
 
@@ -474,3 +487,18 @@ def plot_z_polar(x: np.ndarray, z: ZType) -> Axes:
         )
 
     return ax
+
+
+def plot_weights_stddev(t, weights) -> None:
+    """
+    plot the standard deviation of particle weights vs. time
+    """
+    fig = plt.figure()
+    ax = fig.subplots()
+
+    ax.scatter(t[:-1], weights[:-1], s=10, color="blue")
+    ax.scatter([t[-1]], [weights[-1]], s=10, color="red")
+    ax.set_xlabel("t (s)")
+    ax.set_ylabel("stddev of particle weights")
+    ax.set_title("standard deviation of particle weights vs. time")
+    fig.show()
