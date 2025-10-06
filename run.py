@@ -36,9 +36,9 @@ def main():
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
     # circle_test(ds)
     # question_2(ds)
-    question_3(ds)
+    # question_3(ds)
     # question_6(ds)
-    # question_8b(ds)
+    question_8b(ds)
 
 
 def question_2(ds: Dataset) -> None:
@@ -177,7 +177,7 @@ def question_8b(ds: Dataset) -> None:
     t_0 = ds.control["time_s"].iloc[0]
 
     states = []
-    motion = TextbookMotionModel(x_0, t_0)
+    motion = TextbookMotionModel()
     measure = MeasurementModel(ds.landmarks)
     noise = GaussianProposalSampler(stddev=0.005)
     pf_config = ParticleFilter.Config(
@@ -187,23 +187,41 @@ def question_8b(ds: Dataset) -> None:
         motion, measure, X_0=x_0, config=pf_config, proposal_sampler=noise
     )
 
-    control = ds.control.copy()
+    # simulate the robot's motion
+    # clump together measurements for each control.
+
+    # note that we actually want the measurements _after_ each control (since they are
+    # the ones taken while we are executing the command, and which are most relevant
+    # to the state after that command)
+    # so we insert a dummy control prior to the first one, at the same timestamp
+    # as the first measurement
+    dummy_t0 = ds.measurement["time_s"].iloc[0]
+    if ds.control["time_s"].iloc[0] < dummy_t0:
+        dummy_t0 = ds.control["time_s"].iloc[0]
+    dummy_t0 -= 0.0001
+    dummy_u0 = pd.DataFrame(
+        {
+            "time_s": [dummy_t0],
+            "forward_velocity_mps": [0.0],
+            "angular_velocity_radps": [0.0],
+        }
+    )
+    control = pd.concat([dummy_u0, ds.control], ignore_index=True, copy=True)
     control["forward_velocity_mps"] /= 10
 
-    # simulate the robot's motion
-    # clump together measurements for each control
     print("Simulating...")
-    for idx in range(len(ds.control)):
+    for idx in range(0, len(ds.control) - 1):
         ctl = control.iloc[idx]
 
-        prev_t = pf.get_t()
-        curr_t = ctl["time_s"]
+        t_ = ctl["time_s"]
+        t_next = control["time_s"].iloc[idx + 1]
+        dt = t_next - t_
 
-        not_late = ds.measurement_fix["time_s"] <= curr_t
-        not_early = ds.measurement_fix["time_s"] > prev_t
+        not_late = ds.measurement_fix["time_s"] <= t_next
+        not_early = ds.measurement_fix["time_s"] > t_
         meas = ds.measurement_fix[not_late & not_early]
 
-        x_t = pf.step(control=ctl, measurements=meas)
+        x_t = pf.step(control=ctl, measurements=meas, dt=dt)
         states.append(x_t)
 
     print("Done simulating. Plotting...")
@@ -211,7 +229,7 @@ def question_8b(ds: Dataset) -> None:
 
     traj = pd.DataFrame(
         {
-            "time_s": ds.control["time_s"],
+            "time_s": ds.control["time_s"].iloc[1:],
             "x_m": states[:, 0],
             "y_m": states[:, 1],
             "orientation_rad": states[:, 2],

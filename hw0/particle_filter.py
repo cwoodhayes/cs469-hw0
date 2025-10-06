@@ -97,12 +97,13 @@ class ParticleFilter:
         if config.n_particles <= 0:
             raise ValueError("n_particles must be >0")
 
-        self._t = 0
         self._X_t = np.ndarray(shape=(config.n_particles, 3))
         self._X_t[:, :] = X_0
         # """each particle is (x_m, y_m, orientation_rads)"""
 
-    def step(self, control: pd.Series, measurements: pd.DataFrame) -> np.ndarray:
+    def step(
+        self, control: pd.Series, measurements: pd.DataFrame, dt: float
+    ) -> np.ndarray:
         """
         Process the filter, taking us from X_t-1 to X_t
 
@@ -111,22 +112,10 @@ class ParticleFilter:
         :param measurements: a set of measurement inputs taken in (t-1, t] -- i.e.
         the previous call of step() and the timestamp of control
         :type measurements: pd.DataFrame, in the format of Dataset.measurement
+        :param dt: duration for which this control is followed
         :return: a single state prediction at time t (x_t)
         :rtype: ndarray[time_s, x_m, y_m, orientation_rad]
         """
-        ## Input sanity checking
-        new_t = control["time_s"]
-        if new_t <= self._t:
-            raise ValueError("t must increase monotonically")
-
-        m_invalid = (measurements["time_s"] <= self._t) | (
-            measurements["time_s"] > new_t
-        )
-        if any(m_invalid):
-            print("Invalid measurement: ")
-            print(measurements)
-            raise ValueError("measurement timestamps are invalid")
-
         ## FILTER implementation
         # TODO be more clever about numpy usage?
 
@@ -143,7 +132,7 @@ class ParticleFilter:
             # get dynamics prediction x_t(u_t, x_t-1)
             # i.e. propagate this one particle according to the deterministic
             # physics model
-            x_t = self.motion.step_abs_t(u_t, new_t, x_prev=X_prev[idx])
+            x_t = self.motion.step(u_t, X_prev[idx], dt)
             # add noise to get p(x_t | ...) AKA this particle
             x_t += X_noise_t[idx, :]
 
@@ -165,7 +154,6 @@ class ParticleFilter:
         X_t = self._sample_low_variance(Xbar_t, W_t)
 
         ## Final updates
-        self._t = new_t
         self._X_t = X_t
 
         ## Derive concrete state prediction from particles
