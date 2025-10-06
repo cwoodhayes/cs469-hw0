@@ -186,7 +186,15 @@ def question_8b(ds: Dataset) -> None:
 
     states = []
     motion = TextbookMotionModel()
-    measure = MeasurementModel(ds.landmarks)
+    measure = MeasurementModel(
+        ds.landmarks,
+        cov_matrix=np.array(
+            [
+                [0.001, 0.001],
+                [0.001, 0.001],
+            ]
+        ),
+    )
     u_noise = GaussianProposalSampler(stddev=0.005)
     pf_config = ParticleFilter.Config(
         random_seed=0,
@@ -248,8 +256,8 @@ def question_8b(ds: Dataset) -> None:
             "orientation_rad": states[:, 2],
         }
     )
-    plot_trajectories_and_particles(ds, traj, pf.get_Xt(), "Dead-Reckoned Trajectory")
-    plot_trajectories_error(ds, {"Dead-Reckoned Trajectory": traj})
+    plot_trajectories_and_particles(ds, traj, pf.get_Xt(), "PF Trajectory")
+    plot_trajectories_error(ds, {"PF Trajectory": traj})
     plt.show()
 
 

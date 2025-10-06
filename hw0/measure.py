@@ -4,6 +4,7 @@ Measurement estimation
 
 import numpy as np
 import pandas as pd
+from scipy.linalg import expm
 
 
 ZType = pd.DataFrame
@@ -19,8 +20,14 @@ class MeasurementModel:
     Predicts z given a noiseless x
     """
 
-    def __init__(self, landmarks: pd.DataFrame):
+    def __init__(self, landmarks: pd.DataFrame, cov_matrix: np.ndarray):
+        """
+        :param landmarks: ds.landmarks
+        :param cov_matrix: gaussian measurement noise covariance matrix
+        :type cov_matrix: 2x2 np.ndarray
+        """
         self._landmarks = landmarks
+        self._cov = cov_matrix
 
         # a more efficient representation for fast accesses
         lmdict = dict()
@@ -111,5 +118,15 @@ class MeasurementModel:
         :return: probability 0-1
         """
         z_pred = self.z_given_x_by_landmark(x, z_actual.subject)
-        # TODO fill in
-        return 1.0
+
+        z = np.array((z_actual.range_m, z_actual.bearing_rad))
+        err = z - z_pred
+        err_T = err.reshape((-1, 1))
+
+        exp = 0.5 * (err @ self._cov @ err_T)
+        errs = expm(exp)
+
+        # flatten out into a float for weighting
+        norm_err = np.linalg.norm(errs)
+
+        return norm_err
