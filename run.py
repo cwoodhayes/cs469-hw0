@@ -188,7 +188,6 @@ def question_8b(ds: Dataset) -> None:
     motion = TextbookMotionModel()
     measure = MeasurementModel(ds.landmarks)
     u_noise = GaussianProposalSampler(stddev=0.005)
-    z_noise = GaussianProposalSampler(stddev=0.005)
     pf_config = ParticleFilter.Config(
         random_seed=0,
         n_particles=50,
@@ -199,7 +198,6 @@ def question_8b(ds: Dataset) -> None:
         X_0=x_0,
         config=pf_config,
         u_noise=u_noise,
-        z_noise=z_noise,
     )
 
     # simulate the robot's motion

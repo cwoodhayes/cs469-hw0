@@ -73,7 +73,6 @@ class ParticleFilter:
         motion_model: NoiselessMotionModelBase,
         measurement_model: MeasurementModel,
         u_noise: ProposalSamplerBase,
-        z_noise: ProposalSamplerBase,
         X_0: np.ndarray | None,
         config: Config = DEFAULT_CONFIG,
     ):
@@ -82,7 +81,6 @@ class ParticleFilter:
         :param measurement_model: measurement model for the robot
         :param X_0: initial particle set, or a single known initial state
         :param u_noise: probability distribution for controls
-        :param z_noise: probability distribution for measurements
         :param config: filter configuration object
         """
         self.motion = motion_model
@@ -91,8 +89,6 @@ class ParticleFilter:
 
         u_noise.set_shape((config.n_particles, 3))
         self._u_noise = u_noise
-        z_noise.set_shape((config.n_particles, 3))
-        self._z_noise = z_noise
 
         ## input checking
         if not (X_0.shape == (config.n_particles, 3) or X_0.shape == (3,)):
