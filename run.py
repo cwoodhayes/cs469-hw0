@@ -143,7 +143,7 @@ def question_8b(ds: Dataset) -> None:
     print("!!!!!!!!!!!!!!!!!!! QUESTION 8b !!!!!!!!!!!")
 
     # this is for debugging purposes, to grab only a subset of the points
-    ds = ds.segment_percent(0.0, 0.2, normalize_timestamps=True)
+    ds = ds.segment_percent(0.0, 0.1, normalize_timestamps=True)
     ds.print_info()
 
     # grab the initial location from the first ground truth value
@@ -162,7 +162,9 @@ def question_8b(ds: Dataset) -> None:
             ]
         ),
     )
-    u_noise = GaussianProposalSampler(stddev=0.005)
+    u_noise = GaussianProposalSampler(
+        stddev=0.005,
+    )
     pf_config = ParticleFilter.Config(
         random_seed=0,
         n_particles=50,
