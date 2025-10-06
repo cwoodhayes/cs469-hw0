@@ -77,40 +77,7 @@ def question_3(ds: Dataset) -> None:
 
     # this is for debugging purposes, to grab only a subset of the points
     # ds = ds.segment_percent(0, 0.1)
-
-    # grab the initial location from the first ground truth value
-    x_0 = ds.ground_truth[["x_m", "y_m", "orientation_rad"]].to_numpy()[0]
-    # and the first timestamp from the controls
-    t_0 = ds.control["time_s"][0]
-
-    # grab the commands
-    u_ts = ds.control["time_s"].to_numpy()
-    u = ds.control[["forward_velocity_mps", "angular_velocity_radps"]].to_numpy()
-    u = u / (10, 1)
-
-    states = []
-    m = TextbookMotionModel()
-
-    # simulate the robot's motion
-    # must skip the last command cuz we don't know how long it runs
-    x_prev = x_0
-    for idx in range(u.shape[0] - 1):
-        states.append(x_prev)
-        dt = u_ts[idx + 1] - u_ts[idx]
-        x_t = m.step(u[idx], x_prev, dt)
-        x_prev = x_t
-    states.append(x_prev)
-
-    states = np.array(states)
-
-    traj = pd.DataFrame(
-        {
-            "time_s": ds.control["time_s"],
-            "x_m": states[:, 0],
-            "y_m": states[::, 1],
-            "orientation_rad": states[:, 2],
-        }
-    )
+    traj = dead_reckoner(ds)
     plot_trajectories_pretty(ds, traj, "Dead-Reckoned Trajectory")
     # plot_trajectories_error(ds, {"Dead-Reckoned Trajectory": traj})
     plt.show()
@@ -176,7 +143,7 @@ def question_8b(ds: Dataset) -> None:
     print("!!!!!!!!!!!!!!!!!!! QUESTION 8b !!!!!!!!!!!")
 
     # this is for debugging purposes, to grab only a subset of the points
-    ds = ds.segment_percent(0.0, 0.1, normalize_timestamps=True)
+    ds = ds.segment_percent(0.0, 0.2, normalize_timestamps=True)
     ds.print_info()
 
     # grab the initial location from the first ground truth value
@@ -231,7 +198,7 @@ def question_8b(ds: Dataset) -> None:
     control["forward_velocity_mps"] /= 10
 
     print("Simulating...")
-    for idx in range(0, len(ds.control) - 1):
+    for idx in range(0, len(control) - 1):
         ctl = control.iloc[idx]
 
         t_ = ctl["time_s"]
@@ -250,15 +217,65 @@ def question_8b(ds: Dataset) -> None:
 
     traj = pd.DataFrame(
         {
-            "time_s": ds.control["time_s"].iloc[1:],
+            "time_s": control["time_s"].iloc[1:],
             "x_m": states[:, 0],
             "y_m": states[:, 1],
             "orientation_rad": states[:, 2],
         }
-    )
+    ).reset_index()
+    dr_traj = dead_reckoner(ds)
+
     plot_trajectories_and_particles(ds, traj, pf.get_Xt(), "PF Trajectory")
-    plot_trajectories_error(ds, {"PF Trajectory": traj})
+    plot_trajectories_error(
+        ds,
+        {
+            "PF Trajectory": traj,
+            "DR Trajectory": dr_traj,
+        },
+    )
     plt.show()
+
+
+def dead_reckoner(ds: Dataset) -> pd.DataFrame:
+    """
+    Docstring for dead_reckoner
+
+    :param ds: dataset
+    :return: trajectory for a dead-reckoned robot (i.e. raw dynamics from controls)
+    :rtype: DataFrame in form of ds.ground_truth
+    """
+    # grab the initial location from the first ground truth value
+    x_0 = ds.ground_truth[["x_m", "y_m", "orientation_rad"]].to_numpy()[0]
+
+    # grab the commands
+    u_ts = ds.control["time_s"].to_numpy()
+    u = ds.control[["forward_velocity_mps", "angular_velocity_radps"]].to_numpy()
+    u = u / (10, 1)
+
+    states = []
+    m = TextbookMotionModel()
+
+    # simulate the robot's motion
+    # must skip the last command cuz we don't know how long it runs
+    x_prev = x_0
+    for idx in range(u.shape[0] - 1):
+        states.append(x_prev)
+        dt = u_ts[idx + 1] - u_ts[idx]
+        x_t = m.step(u[idx], x_prev, dt)
+        x_prev = x_t
+    states.append(x_prev)
+
+    states = np.array(states)
+
+    traj = pd.DataFrame(
+        {
+            "time_s": ds.control["time_s"],
+            "x_m": states[:, 0],
+            "y_m": states[::, 1],
+            "orientation_rad": states[:, 2],
+        }
+    )
+    return traj
 
 
 if __name__ == "__main__":
