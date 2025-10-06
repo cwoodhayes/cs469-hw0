@@ -156,11 +156,11 @@ def question_8b(ds: Dataset) -> None:
         ds.landmarks,
         cov_matrix=np.array(
             [
-                [0.5, 0.5],
-                [0.5, 0.5],
+                [0.5, 0.4],
+                [0.3, 0.2],
             ]
         )
-        / 10000,
+        / 1000,
     )
     u_noise = GaussianProposalSampler(
         stddev=0.05,

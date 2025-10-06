@@ -38,6 +38,9 @@ class MeasurementModel:
         self._landmarks = landmarks
         self._cov = cov_matrix
 
+        self._cov_inv = np.linalg.inv(self._cov)
+        self._det_cov = np.linalg.det(self._cov)
+
         # a more efficient representation for fast accesses
         lmdict = dict()
         for lm in self._landmarks.itertuples():
@@ -126,16 +129,22 @@ class MeasurementModel:
         :param x: [x_m, y_m, orientation_rad]
         :return: probability 0-1
         """
+        # predicted [range, bearing]
         z_pred = self.z_given_x_by_landmark(x, z_actual[1])
 
-        z = np.array((z_actual[2], z_actual[3]))
+        z = np.array([z_actual[2], z_actual[3]])
+        # 2x1 residual
         err = z - z_pred
-        err_T = err.reshape((-1, 1))
 
-        exp = 0.5 * (err @ self._cov @ err_T)
-        errs = expm(exp)
+        # n = len(z)
 
-        # flatten out into a float for weighting
-        norm_err = np.linalg.norm(errs)
+        # # Gaussian likelihood
+        # exp_term = -0.5 * (err @ self._cov_inv @ err.T)
+        # norm_const = 1.0 / np.sqrt((2 * np.pi) ** n * self._det_cov)
+        # p = norm_const * np.exp(exp_term)
 
-        return norm_err
+        # Flatten out (err @ cov_inv @ err.T) gives [[scalar]]
+        # return float(p)
+
+        # silly dumn euclidian norm
+        return 1 / np.linalg.norm(err)

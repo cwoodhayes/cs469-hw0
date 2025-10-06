@@ -168,7 +168,7 @@ class ParticleFilter:
 
         # debugging variables
         t_ = control["time_s"]
-        if W_t.std() > 0:
+        if len(measurements) > 0:
             self.debug_X_t_last_with_weights = X_t
             self.debug_Xbar_t_last_with_weights = Xbar_t
         self.debug_weights_stddev.append((t_, W_t.std()))
