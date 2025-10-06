@@ -99,16 +99,17 @@ class MeasurementModel:
 
         return np.array([r, theta])
 
-    def probability_z_given_x(self, x: np.ndarray, z_actual: tuple) -> float:
+    def probability_z_given_x(self, z_actual: tuple, x: np.ndarray) -> float:
         """
         Evaluates probability of observing z_actual, given state x
 
         Uses Gaussian likelihood
 
-        :param x: [x_m, y_m, orientation_rad]
         :param z_actual: actual observation z
-        :type z_actual: tuple of (time_s, subject #, range_m, bearing_rad)
+        :type z_actual: namedtuple of (time_s, subject, range_m, bearing_rad)
+        :param x: [x_m, y_m, orientation_rad]
         :return: probability 0-1
         """
+        z_pred = self.z_given_x_by_landmark(x, z_actual.subject)
         # TODO fill in
         return 1.0

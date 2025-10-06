@@ -42,10 +42,17 @@ class Dataset:
             bc["subject"].values, index=bc["barcode"].values
         )
 
-        self.measurement_fix = self.measurement.copy()
-        self.measurement_fix["subject"] = self.measurement["subject"].map(
-            msr_subj_to_landm_subj
-        )
+        fix = self.measurement.copy()
+        fix["subject"] = self.measurement["subject"].map(msr_subj_to_landm_subj)
+        # also, extremely annoyingly, there are measurements corresponding
+        # to landmarks which we don't have groundtruth values for.
+        # remove these here.
+        valid_subjects = self.landmarks["subject"].to_list()
+        fix_cleaned = fix[fix["subject"].isin(valid_subjects)]
+
+        print(f"Removed {len(fix) - len(fix_cleaned)} invalid measurements.")
+
+        self.measurement_fix = fix_cleaned
 
     @classmethod
     def from_dataset_directory(cls, p: pathlib.Path) -> Dataset:

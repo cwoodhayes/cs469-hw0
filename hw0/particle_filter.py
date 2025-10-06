@@ -146,11 +146,10 @@ class ParticleFilter:
             # since we can have multiple measurements for one control, we
             # do this in a loop, such that we evaluate the likelihood of all
             # these observations co-occurring for this particle
-            # z_predicted = self.measure.z_given_x(x=x_t)
             w_t = 1.0
-            # for msr in measurements.itertuples():
-            #     p_z = self.measure.probability_z(z_predicted, msr)
-            #     w_t *= p_z
+            for msr in measurements.itertuples():
+                p_z = self.measure.probability_z_given_x(msr, x_t)
+                w_t *= p_z
 
             ## add this particle+weight (x_t, w_t) to Xbar_t
             Xbar_t[idx] = x_t

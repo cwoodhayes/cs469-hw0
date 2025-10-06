@@ -37,8 +37,8 @@ def main():
     # circle_test(ds)
     # question_2(ds)
     # question_3(ds)
-    question_6(ds)
-    # question_8b(ds)
+    # question_6(ds)
+    question_8b(ds)
 
 
 def question_2(ds: Dataset) -> None:
@@ -191,6 +191,7 @@ def question_8b(ds: Dataset) -> None:
     z_noise = GaussianProposalSampler(stddev=0.005)
     pf_config = ParticleFilter.Config(
         random_seed=0,
+        n_particles=50,
     )
     pf = ParticleFilter(
         motion,
@@ -209,7 +210,7 @@ def question_8b(ds: Dataset) -> None:
     # to the state after that command)
     # so we insert a dummy control prior to the first one, at the same timestamp
     # as the first measurement
-    dummy_t0 = ds.measurement["time_s"].iloc[0]
+    dummy_t0 = ds.measurement_fix["time_s"].iloc[0]
     if ds.control["time_s"].iloc[0] < dummy_t0:
         dummy_t0 = ds.control["time_s"].iloc[0]
     dummy_t0 -= 0.0001
