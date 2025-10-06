@@ -13,22 +13,42 @@ from hw0.motion import NoiselessMotionModelBase
 from hw0.measure import MeasurementModel
 
 
-class GaussianProposalSampler:
+class ProposalSamplerBase(abc.ABC):
+    def __init__(self):
+        self._shape: tuple[int] | None = None
+
+    def set_shape(self, shape: tuple[int]) -> None:
+        """
+        This must be called by the particlefilter before
+        sample() is used.
+
+        :param self: Description
+        :param shape: Description
+        :type shape: tuple[int]
+        """
+        self._shape = shape
+
+    @abc.abstractmethod
+    def sample(self) -> np.ndarray:
+        pass
+
+
+class GaussianProposalSampler(ProposalSamplerBase):
     """
     Samples from gaussian centered at the origin
     """
 
-    def __init__(self, shape: tuple[int], stddev: np.ndarray):
+    def __init__(self, stddev: np.ndarray):
         """
         :param shape: output shape
         :type shape: tuple[int]
         """
-        self.shape = shape
+        super().__init__()
         self.stddev = stddev
         self.rng = np.random.default_rng()
 
     def sample(self) -> np.ndarray:
-        return self.rng.normal(0, self.stddev, size=self.shape)
+        return self.rng.normal(0, self.stddev, size=self._shape)
 
 
 class ParticleFilter:
@@ -52,8 +72,8 @@ class ParticleFilter:
         self,
         motion_model: NoiselessMotionModelBase,
         measurement_model: MeasurementModel,
+        proposal_sampler: ProposalSamplerBase,
         X_0: np.ndarray | None,
-        proposal_sampler: GaussianProposalSampler | None = None,
         config: Config = DEFAULT_CONFIG,
     ):
         """
@@ -66,6 +86,8 @@ class ParticleFilter:
         self.motion = motion_model
         self.measure = measurement_model
         self._c = config
+        self._noise = proposal_sampler
+        self._noise.set_shape((config.n_particles, 3))
 
         ## input checking
         if not (X_0.shape == (config.n_particles, 3) or X_0.shape == (3,)):
@@ -79,16 +101,6 @@ class ParticleFilter:
         self._X_t = np.ndarray(shape=(config.n_particles, 3))
         self._X_t[:, :] = X_0
         # """each particle is (x_m, y_m, orientation_rads)"""
-
-        # we'll be sampling noise for every particle
-        if proposal_sampler is None:
-            # TODO enable passing parameters in config
-            self._noise = GaussianProposalSampler(
-                shape=(config.n_particles, 3),
-                stddev=0.001,
-            )
-        else:
-            self._noise = proposal_sampler
 
     def step(self, control: pd.Series, measurements: pd.DataFrame) -> np.ndarray:
         """

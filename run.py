@@ -35,9 +35,9 @@ def main():
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
     # circle_test(ds)
     # question_2(ds)
-    question_3(ds)
+    # question_3(ds)
     # question_6(ds)
-    # question_8b(ds)
+    question_8b(ds)
 
 
 def circle_test(ds: Dataset) -> None:
@@ -212,11 +212,13 @@ def question_8b(ds: Dataset) -> None:
     states = []
     motion = TextbookNoiselessMotionModel(x_0, t_0)
     measure = MeasurementModel(ds.landmarks)
-
+    noise = GaussianProposalSampler(stddev=0.005)
     pf_config = ParticleFilter.Config(
         random_seed=0,
     )
-    pf = ParticleFilter(motion, measure, X_0=x_0, config=pf_config)
+    pf = ParticleFilter(
+        motion, measure, X_0=x_0, config=pf_config, proposal_sampler=noise
+    )
 
     control = ds.control.copy()
     control["forward_velocity_mps"] /= 10
