@@ -34,9 +34,9 @@ def main():
 
     # my assigned dataset is ds1, so I'm hardcoding this
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
-    circle_test(ds)
-    question_2(ds)
-    # question_3(ds)
+    # circle_test(ds)
+    # question_2(ds)
+    question_3(ds)
     # question_6(ds)
     # question_8b(ds)
 
@@ -88,21 +88,27 @@ def question_3(ds: Dataset) -> None:
     u = ds.control[["forward_velocity_mps", "angular_velocity_radps"]].to_numpy()
     u = u / (10, 1)
 
-    states = [x_0]
-    m = TextbookMotionModel(x_0, t_0)
+    states = []
+    m = TextbookMotionModel()
 
     # simulate the robot's motion
-    for idx in range(u.shape[0]):
-        states.append(m.step_abs_t(u[idx], u_ts[idx]))
+    # must skip the last command cuz we don't know how long it runs
+    x_prev = x_0
+    for idx in range(u.shape[0] - 1):
+        states.append(x_prev)
+        dt = u_ts[idx + 1] - u_ts[idx]
+        x_t = m.step(u[idx], x_prev, dt)
+        x_prev = x_t
+    states.append(x_prev)
 
     states = np.array(states)
 
     traj = pd.DataFrame(
         {
             "time_s": ds.control["time_s"],
-            "x_m": states[:-1, 0],
-            "y_m": states[:-1:, 1],
-            "orientation_rad": states[:-1:, 2],
+            "x_m": states[:, 0],
+            "y_m": states[::, 1],
+            "orientation_rad": states[:, 2],
         }
     )
     plot_trajectories_pretty(ds, traj, "Dead-Reckoned Trajectory")
