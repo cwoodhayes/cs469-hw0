@@ -143,7 +143,7 @@ class ParticleFilter:
             # do this in a loop, such that we evaluate the likelihood of all
             # these observations co-occurring for this particle
             w_t = 1.0
-            for msr in measurements.itertuples():
+            for msr in measurements.itertuples(index=False):
                 p_z = self.measure.probability_z_given_x(msr, x_t)
                 w_t *= p_z
 

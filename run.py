@@ -37,7 +37,7 @@ def main():
     # circle_test(ds)
     # question_2(ds)
     # question_3(ds)
-    # question_6(ds)
+    question_6(ds)
     question_8b(ds)
 
 
@@ -103,7 +103,7 @@ def question_6(ds: Dataset, plot: bool = False) -> None:
     )
     test_data["z_by_landmark"] = test_data.apply(
         lambda row: predictor.z_given_x_by_landmark(
-            x=row["position"], subject=row["landmark"]
+            x=np.array(row["position"]), subject=row["landmark"]
         ),
         axis=1,
     )

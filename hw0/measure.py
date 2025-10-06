@@ -20,7 +20,16 @@ class MeasurementModel:
     Predicts z given a noiseless x
     """
 
-    def __init__(self, landmarks: pd.DataFrame, cov_matrix: np.ndarray):
+    DEFAULT_COV_MATRIX = np.array(
+        [
+            [0.005, 0.005],
+            [0.005, 0.005],
+        ]
+    )
+
+    def __init__(
+        self, landmarks: pd.DataFrame, cov_matrix: np.ndarray = DEFAULT_COV_MATRIX
+    ):
         """
         :param landmarks: ds.landmarks
         :param cov_matrix: gaussian measurement noise covariance matrix
@@ -33,7 +42,7 @@ class MeasurementModel:
         lmdict = dict()
         for lm in self._landmarks.itertuples():
             lmdict[lm.subject] = np.array([lm.x_m, lm.y_m])
-        self._lmdict = lmdict
+        self._lmdict: dict[int, np.ndarray] = lmdict
 
     def z_given_x(self, x: np.ndarray) -> ZType:
         """
@@ -117,9 +126,9 @@ class MeasurementModel:
         :param x: [x_m, y_m, orientation_rad]
         :return: probability 0-1
         """
-        z_pred = self.z_given_x_by_landmark(x, z_actual.subject)
+        z_pred = self.z_given_x_by_landmark(x, z_actual[1])
 
-        z = np.array((z_actual.range_m, z_actual.bearing_rad))
+        z = np.array((z_actual[2], z_actual[3]))
         err = z - z_pred
         err_T = err.reshape((-1, 1))
 
