@@ -21,6 +21,7 @@ def plot_trajectories_and_particles(
     final_particles: np.ndarray,
     label: str,
     n_seconds_per_arrow: int = 10,
+    traj2: tuple[pd.DataFrame, str] = None,
 ) -> None:
     """
     Show a map of the environment, with a given predicted trajectory plotted
@@ -31,8 +32,12 @@ def plot_trajectories_and_particles(
     :param traj: predicted robot trajectory, in the same format as ds.groundtruth
     :param final_particles: particle set from ParticleFilter.get_Xt()
     :param label: descriptive name for this trajectory
+    :param traj2: another trajectory for comparison, if desired
+    :type traj2: (trajectory, label)
     """
-    fig, ax = plot_trajectories_pretty(ds, traj, label, n_seconds_per_arrow)
+    fig, ax = plot_trajectories_pretty(
+        ds, traj, label, n_seconds_per_arrow, traj2=traj2
+    )
 
     tf = traj["time_s"].iloc[-1]
     ax.set_title(f"Ground Truth vs. {label} - Particles after {tf:.3f}s")
@@ -56,6 +61,7 @@ def plot_trajectories_pretty(
     traj: pd.DataFrame,
     label: str,
     n_seconds_per_arrow: int = 10,
+    traj2: tuple[pd.DataFrame, str] = None,
 ) -> tuple[Figure, Axes]:
     """
     Show a map of the environment, with a given predicted trajectory plotted
@@ -64,6 +70,9 @@ def plot_trajectories_pretty(
     :param ds: full robot dataset
     :param traj: predicted robot trajectory, in the same format as ds.groundtruth
     :param label: descriptive name for this trajectory
+    :param traj: another trajectory along with its label, if desired.
+    no point making this a list cuz if there's more than 2 the plot
+    gets impossible to read
     """
     fig = plt.figure()
     ax = fig.subplots()
@@ -118,8 +127,8 @@ def plot_trajectories_pretty(
         ds.ground_truth,
         n_seconds_per_arrow=n_seconds_per_arrow,
         color="#bbbbff",
-        start_color="#3232e4",
-        end_color="#393955",
+        start_color="#09ff00",
+        end_color="#3232e4",
     )
     _plot_trajectory(
         ax,
@@ -127,9 +136,21 @@ def plot_trajectories_pretty(
         traj,
         n_seconds_per_arrow=n_seconds_per_arrow,
         color="#443c23",
-        start_color="#1e911a",
-        end_color="#7a0e00",
+        # start colors are all same
+        start_color="#09ff00",
+        end_color="#362828",
     )
+    if traj2 is not None:
+        _plot_trajectory(
+            ax,
+            traj2[1],
+            traj2[0],
+            n_seconds_per_arrow=n_seconds_per_arrow,
+            color="#7DA07A8F",
+            # same start color as traj1; they will overlay each other.
+            start_color="#09ff00",
+            end_color="#12411e",
+        )
 
     ## Set up the legend & labels
     ax.plot([], [], " ", label=f"*arrows are {n_seconds_per_arrow}s apart")

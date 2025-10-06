@@ -157,8 +157,8 @@ def question_8b(ds: Dataset) -> None:
         ds.landmarks,
         cov_matrix=np.array(
             [
-                [0.001, 0.001],
-                [0.001, 0.001],
+                [0.05, 0.05],
+                [0.05, 0.05],
             ]
         ),
     )
@@ -225,7 +225,13 @@ def question_8b(ds: Dataset) -> None:
     ).reset_index()
     dr_traj = dead_reckoner(ds)
 
-    plot_trajectories_and_particles(ds, traj, pf.get_Xt(), "PF Trajectory")
+    plot_trajectories_and_particles(
+        ds,
+        traj,
+        pf.get_Xt(),
+        "PF Trajectory",
+        traj2=(dr_traj, "DR Trajectory"),
+    )
     plot_trajectories_error(
         ds,
         {
