@@ -23,6 +23,7 @@ from hw0.plot import (
 from hw0.measure import MeasurementModel
 from hw0.integration_tests import circle_test
 from hw0.runners import ParticleFilterRunner, dead_reckoner, DR_TRAJECTORY_FILE
+from hw0.runs import run_factors
 
 REPO_ROOT = pathlib.Path(__file__).parent
 
@@ -41,7 +42,8 @@ def main():
     # question_3(ds)
     # question_6(ds)
     # question_7(ds)
-    question_8b(ds, write=False)
+    # question_8b(ds, write=False)
+    run_factors(ds)
 
 
 def question_2(ds: Dataset) -> None:
@@ -241,7 +243,7 @@ def question_7(ds: Dataset) -> None:
     )
 
     runner = ParticleFilterRunner()
-    pf_traj = runner.run(ds, pf, "initial_test")
+    pf_traj = runner.run(ds, pf, "initial_test", write=False)
     dr_traj = dead_reckoner(ds)
 
     plot_trajectories_and_particles(

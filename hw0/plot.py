@@ -41,7 +41,8 @@ def plot_trajectories_and_particles(
     )
 
     tf = traj["time_s"].iloc[-1]
-    ax.set_title(f"Ground Truth vs. {label} - Particles after {tf:.3f}s")
+    t0 = traj["time_s"].iloc[0]
+    ax.set_title(f"Ground Truth vs. {label} - Particles after {tf - t0:.3f}s")
 
     # plot particles w/o orientation
     ax.scatter(

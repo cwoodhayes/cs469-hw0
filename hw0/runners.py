@@ -5,8 +5,11 @@ Runner for particle filter using the test data
 import pathlib
 import subprocess
 import pickle
+import time
 import numpy as np
 import pandas as pd
+from tqdm import trange
+
 from hw0.data import Dataset, Trajectory
 from hw0.motion import TextbookMotionModel
 from hw0.particle_filter import ParticleFilter
@@ -65,7 +68,8 @@ class ParticleFilterRunner:
         control["forward_velocity_mps"] /= 10
 
         print("Simulating...")
-        for idx in range(0, len(control) - 1):
+        t_start = time.monotonic()
+        for idx in trange(0, len(control) - 1):
             ctl = control.iloc[idx]
 
             t_ = ctl["time_s"]
@@ -79,7 +83,9 @@ class ParticleFilterRunner:
             x_t = pf.step(control=ctl, measurements=meas, dt=dt)
             states.append(x_t)
 
-        print("Done simulating. ")
+        t_end = time.monotonic()
+        run_duration = t_end - t_start
+        print(f"Done simulating after {run_duration} secs.")
 
         states = np.array(states)
 
@@ -95,7 +101,7 @@ class ParticleFilterRunner:
         traj = Trajectory(df, name)
 
         if write:
-            dir_p = self._write(ds, pf, traj, name)
+            dir_p = self._write(ds, pf, traj, name, run_duration)
 
             if write_dr:
                 dead_reckoner(ds, write_path=dir_p)
@@ -103,7 +109,12 @@ class ParticleFilterRunner:
         return traj
 
     def _write(
-        self, ds: Dataset, pf: ParticleFilter, traj: Trajectory, name: str
+        self,
+        ds: Dataset,
+        pf: ParticleFilter,
+        traj: Trajectory,
+        name: str,
+        run_duration: float,
     ) -> pathlib.Path:
         """
         Writes this trajectory & associated run info to a directory
@@ -126,6 +137,7 @@ class ParticleFilterRunner:
         txt += str(pf._u_noise.stddev)
         txt += "\n\n Git commit hash:\n"
         txt += subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+        txt += f"\n\n Run duration: {run_duration} secs"
 
         with open(dir_p / f"{name}_desc.txt", "w") as f:
             f.write(txt)
