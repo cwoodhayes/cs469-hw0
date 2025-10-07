@@ -13,6 +13,7 @@ from hw0.particle_filter import ParticleFilter
 
 __REPO_ROOT = pathlib.Path(__file__).parent.parent
 DEFAULT_RUN_DIR = __REPO_ROOT / "data/filter-runs"
+DR_TRAJECTORY_FILE = DEFAULT_RUN_DIR / "dr_traj.csv"
 
 
 class ParticleFilterRunner:
@@ -21,10 +22,15 @@ class ParticleFilterRunner:
     """
 
     def __init__(self, run_dir: pathlib.Path = DEFAULT_RUN_DIR):
-        self._run_dir = run_dir
+        self.run_dir = run_dir
 
     def run(
-        self, ds: Dataset, pf: ParticleFilter, name: str = "run", write: bool = True
+        self,
+        ds: Dataset,
+        pf: ParticleFilter,
+        name: str = "run",
+        write: bool = True,
+        write_dr: bool = True,
     ) -> Trajectory:
         """
         Runs the given particle filter on the given dataset, returning
@@ -89,7 +95,10 @@ class ParticleFilterRunner:
         traj = Trajectory(df, name)
 
         if write:
-            self._write(ds, pf, traj, name)
+            dir_p = self._write(ds, pf, traj, name)
+
+            if write_dr:
+                dead_reckoner(ds, write_path=dir_p)
 
         return traj
 
@@ -99,16 +108,7 @@ class ParticleFilterRunner:
         """
         Writes this trajectory & associated run info to a directory
         """
-        # covname = (
-        #     str(pf.measure._cov.flatten())
-        #     .replace("[", "")
-        #     .replace("]", "")
-        #     .replace(" ", "_")
-        # )
-        # desc = (
-        #     f"{ds.path.stem}_cov_{covname}_stddev_{type(pf._u_noise).__name__}_{name}"
-        # )
-        dir_p = unique_path(self._run_dir / name)
+        dir_p = unique_path(self.run_dir / name)
         dir_p.mkdir(parents=True, exist_ok=False)
 
         print(f"Writing run info to {dir_p}...")
@@ -130,19 +130,22 @@ class ParticleFilterRunner:
         with open(dir_p / f"{name}_desc.txt", "w") as f:
             f.write(txt)
 
-    def load(run_dir: pathlib.Path) -> tuple[Trajectory, ParticleFilter, str]:
+        return dir_p
+
+    def load(self, name: str) -> tuple[Trajectory, ParticleFilter, Trajectory, str]:
         """
         Loads in a prior run. returns traj, pf, name
         """
-        name = run_dir.split("_")[-1]
-        traj = Trajectory.from_file(run_dir / f"{name}_traj.csv")
-        with open(f"{name}_pf.pkl", "rb") as f:
+        dir_p = self.run_dir / name
+        traj = Trajectory.from_file(dir_p / f"{name}_traj.csv")
+        dr = Trajectory.from_file(dir_p / "dr_traj.csv")
+        with open(dir_p / f"{name}_pf.pkl", "rb") as f:
             pf = pickle.load(f)
 
-        return (traj, pf, name)
+        return (traj, pf, dr, name)
 
 
-def dead_reckoner(ds: Dataset) -> Trajectory:
+def dead_reckoner(ds: Dataset, write_path: pathlib.Path = None) -> Trajectory:
     """
     Docstring for dead_reckoner
 
@@ -173,7 +176,7 @@ def dead_reckoner(ds: Dataset) -> Trajectory:
 
     states = np.array(states)
 
-    traj = pd.DataFrame(
+    df = pd.DataFrame(
         {
             "time_s": ds.control["time_s"],
             "x_m": states[:, 0],
@@ -181,7 +184,12 @@ def dead_reckoner(ds: Dataset) -> Trajectory:
             "orientation_rad": states[:, 2],
         }
     )
-    return Trajectory(traj, "dead_reckoning")
+    traj = Trajectory(df, "dead_reckoning")
+
+    if write_path is not None:
+        traj.to_csv(write_path, "dr")
+
+    return traj
 
 
 def unique_path(p: pathlib.Path) -> pathlib.Path:

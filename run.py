@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from hw0.data import Dataset
+from hw0.data import Dataset, Trajectory
 from hw0.motion import TextbookMotionModel
 from hw0.particle_filter import GaussianProposalSampler, ParticleFilter
 from hw0.plot import (
@@ -22,7 +22,7 @@ from hw0.plot import (
 )
 from hw0.measure import MeasurementModel
 from hw0.integration_tests import circle_test
-from hw0.runners import ParticleFilterRunner, dead_reckoner
+from hw0.runners import ParticleFilterRunner, dead_reckoner, DR_TRAJECTORY_FILE
 
 REPO_ROOT = pathlib.Path(__file__).parent
 
@@ -40,7 +40,8 @@ def main():
     # question_2(ds)
     # question_3(ds)
     # question_6(ds)
-    question_7(ds)
+    # question_7(ds)
+    question_8b(ds, write=False)
 
 
 def question_2(ds: Dataset) -> None:
@@ -137,13 +138,67 @@ def question_6(ds: Dataset, plot: bool = False) -> None:
     plt.show()
 
 
-def question_8b(ds: Dataset, write: bool) -> None:
+def question_8b(ds: Dataset, write: bool = False) -> None:
     """
     Compare the performance of your motion model (i.e., dead reckoning)
     and your full filter on on the robot dataset (as in step 3).
 
     This function either generates fresh data or reads it from a file
     """
+    runner = ParticleFilterRunner()
+
+    if write:
+        # this is for debugging purposes, to grab only a subset of the points
+        # ds = ds.segment_percent(0.0, 0.01, normalize_timestamps=True)
+        ds.print_info()
+
+        # grab the initial location from the first ground truth value
+        x_0 = ds.ground_truth[["x_m", "y_m", "orientation_rad"]].iloc[0].to_numpy()
+
+        motion = TextbookMotionModel()
+        measure = MeasurementModel(
+            ds.landmarks,
+            cov_matrix=np.array(
+                [
+                    [0.5, 0.2],
+                    [0.2, 0.5],
+                ]
+            )
+            / 10,
+        )
+        u_noise = GaussianProposalSampler(
+            stddev=0.05,
+        )
+        pf_config = ParticleFilter.Config(
+            random_seed=0,
+            n_particles=100,
+        )
+        pf = ParticleFilter(
+            motion,
+            measure,
+            X_0=x_0,
+            config=pf_config,
+            u_noise=u_noise,
+        )
+        runner.run(ds, pf, "full_test")
+
+    pf_traj, pf, dr_traj, name = runner.load("full_test")
+    plot_trajectories_and_particles(
+        ds,
+        pf_traj.df,
+        pf.debug_X_t_last_with_weights,
+        "PF Trajectory",
+        traj2=(dr_traj.df, "DR Trajectory"),
+        final_Xbar_t=pf.debug_Xbar_t_last_with_weights,
+    )
+    plot_trajectories_error(
+        ds,
+        {
+            "PF Trajectory": pf_traj.df,
+            "DR Trajectory": dr_traj.df,
+        },
+    )
+    plt.show()
 
 
 def question_7(ds: Dataset) -> None:
