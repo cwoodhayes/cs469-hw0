@@ -18,6 +18,8 @@ __REPO_ROOT = pathlib.Path(__file__).parent.parent
 DEFAULT_RUN_DIR = __REPO_ROOT / "data/filter-runs"
 DR_TRAJECTORY_FILE = DEFAULT_RUN_DIR / "dr_traj.csv"
 
+COMMIT_HASH = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+
 
 class ParticleFilterRunner:
     """
@@ -136,7 +138,7 @@ class ParticleFilterRunner:
         txt += "\n\n Control Noise: \n"
         txt += str(pf._u_noise.stddev)
         txt += "\n\n Git commit hash:\n"
-        txt += subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+        txt += COMMIT_HASH
         txt += f"\n\n Run duration: {run_duration} secs"
 
         with open(dir_p / f"{name}_desc.txt", "w") as f:

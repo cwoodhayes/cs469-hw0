@@ -22,7 +22,7 @@ from hw0.plot import (
 )
 from hw0.measure import MeasurementModel
 from hw0.integration_tests import circle_test
-from hw0.runners import ParticleFilterRunner, dead_reckoner, DR_TRAJECTORY_FILE
+from hw0.runners import ParticleFilterRunner, dead_reckoner
 from hw0.runs import run_factors
 
 REPO_ROOT = pathlib.Path(__file__).parent
