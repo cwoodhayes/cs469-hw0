@@ -22,6 +22,7 @@ from hw0.plot import (
 )
 from hw0.measure import MeasurementModel
 from hw0.integration_tests import circle_test
+from hw0.runners import ParticleFilterRunner, dead_reckoner
 
 REPO_ROOT = pathlib.Path(__file__).parent
 
@@ -39,7 +40,7 @@ def main():
     # question_2(ds)
     # question_3(ds)
     # question_6(ds)
-    question_8b(ds)
+    question_7(ds)
 
 
 def question_2(ds: Dataset) -> None:
@@ -136,21 +137,28 @@ def question_6(ds: Dataset, plot: bool = False) -> None:
     plt.show()
 
 
-def question_8b(ds: Dataset) -> None:
+def question_8b(ds: Dataset, write: bool) -> None:
     """
     Compare the performance of your motion model (i.e., dead reckoning)
     and your full filter on on the robot dataset (as in step 3).
+
+    This function either generates fresh data or reads it from a file
+    """
+
+
+def question_7(ds: Dataset) -> None:
+    """
+    implement the full filter
     """
     print("!!!!!!!!!!!!!!!!!!! QUESTION 8b !!!!!!!!!!!")
 
     # this is for debugging purposes, to grab only a subset of the points
-    ds = ds.segment_percent(0.0, 1.0, normalize_timestamps=True)
+    ds = ds.segment_percent(0.0, 0.1, normalize_timestamps=True)
     ds.print_info()
 
     # grab the initial location from the first ground truth value
     x_0 = ds.ground_truth[["x_m", "y_m", "orientation_rad"]].iloc[0].to_numpy()
 
-    states = []
     motion = TextbookMotionModel()
     measure = MeasurementModel(
         ds.landmarks,
@@ -160,14 +168,14 @@ def question_8b(ds: Dataset) -> None:
                 [0.2, 0.5],
             ]
         )
-        / 100,
+        / 10,
     )
     u_noise = GaussianProposalSampler(
-        stddev=0.01,
+        stddev=0.05,
     )
     pf_config = ParticleFilter.Config(
         random_seed=0,
-        n_particles=50,
+        n_particles=100,
     )
     pf = ParticleFilter(
         motion,
@@ -177,116 +185,28 @@ def question_8b(ds: Dataset) -> None:
         u_noise=u_noise,
     )
 
-    # simulate the robot's motion
-    # clump together measurements for each control.
-
-    # note that we actually want the measurements _after_ each control (since they are
-    # the ones taken while we are executing the command, and which are most relevant
-    # to the state after that command)
-    # so we insert a dummy control prior to the first one, at the same timestamp
-    # as the first measurement
-    dummy_t0 = ds.measurement_fix["time_s"].iloc[0]
-    if ds.control["time_s"].iloc[0] < dummy_t0:
-        dummy_t0 = ds.control["time_s"].iloc[0]
-    dummy_t0 -= 0.0001
-    dummy_u0 = pd.DataFrame(
-        {
-            "time_s": [dummy_t0],
-            "forward_velocity_mps": [0.0],
-            "angular_velocity_radps": [0.0],
-        }
-    )
-    control = pd.concat([dummy_u0, ds.control], ignore_index=True, copy=True)
-    control["forward_velocity_mps"] /= 10
-
-    print("Simulating...")
-    for idx in range(0, len(control) - 1):
-        ctl = control.iloc[idx]
-
-        t_ = ctl["time_s"]
-        t_next = control["time_s"].iloc[idx + 1]
-        dt = t_next - t_
-
-        not_late = ds.measurement_fix["time_s"] <= t_next
-        not_early = ds.measurement_fix["time_s"] > t_
-        meas = ds.measurement_fix[not_late & not_early]
-
-        x_t = pf.step(control=ctl, measurements=meas, dt=dt)
-        states.append(x_t)
-
-    print("Done simulating. Plotting...")
-    states = np.array(states)
-
-    traj = pd.DataFrame(
-        {
-            "time_s": control["time_s"].iloc[1:],
-            "x_m": states[:, 0],
-            "y_m": states[:, 1],
-            "orientation_rad": states[:, 2],
-        }
-    ).reset_index()
+    runner = ParticleFilterRunner()
+    pf_traj = runner.run(ds, pf, "initial_test")
     dr_traj = dead_reckoner(ds)
 
     plot_trajectories_and_particles(
         ds,
-        traj,
+        pf_traj.df,
         pf.debug_X_t_last_with_weights,
         "PF Trajectory",
-        traj2=(dr_traj, "DR Trajectory"),
+        traj2=(dr_traj.df, "DR Trajectory"),
         final_Xbar_t=pf.debug_Xbar_t_last_with_weights,
     )
     plot_trajectories_error(
         ds,
         {
-            "PF Trajectory": traj,
-            "DR Trajectory": dr_traj,
+            "PF Trajectory": pf_traj.df,
+            "DR Trajectory": dr_traj.df,
         },
     )
     weights = np.array(pf.debug_weights_stddev)
     plot_weights_stddev(weights[:, 0], weights[:, 1])
     plt.show()
-
-
-def dead_reckoner(ds: Dataset) -> pd.DataFrame:
-    """
-    Docstring for dead_reckoner
-
-    :param ds: dataset
-    :return: trajectory for a dead-reckoned robot (i.e. raw dynamics from controls)
-    :rtype: DataFrame in form of ds.ground_truth
-    """
-    # grab the initial location from the first ground truth value
-    x_0 = ds.ground_truth[["x_m", "y_m", "orientation_rad"]].to_numpy()[0]
-
-    # grab the commands
-    u_ts = ds.control["time_s"].to_numpy()
-    u = ds.control[["forward_velocity_mps", "angular_velocity_radps"]].to_numpy()
-    u = u / (10, 1)
-
-    states = []
-    m = TextbookMotionModel()
-
-    # simulate the robot's motion
-    # must skip the last command cuz we don't know how long it runs
-    x_prev = x_0
-    for idx in range(u.shape[0] - 1):
-        states.append(x_prev)
-        dt = u_ts[idx + 1] - u_ts[idx]
-        x_t = m.step(u[idx], x_prev, dt)
-        x_prev = x_t
-    states.append(x_prev)
-
-    states = np.array(states)
-
-    traj = pd.DataFrame(
-        {
-            "time_s": ds.control["time_s"],
-            "x_m": states[:, 0],
-            "y_m": states[::, 1],
-            "orientation_rad": states[:, 2],
-        }
-    )
-    return traj
 
 
 if __name__ == "__main__":

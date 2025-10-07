@@ -191,3 +191,35 @@ class Dataset:
         out += "\n"
 
         return out
+
+
+@dataclass
+class Trajectory:
+    df: pd.DataFrame
+    # descriptive name for this trajectory
+    name: str
+
+    @classmethod
+    def from_file(cls, p: pathlib.Path) -> Trajectory:
+        df = pd.read_csv(p)
+        toks = p.name.split("_traj.csv")
+        if len(toks) != 2:
+            raise ValueError(f"Invalid filepath for trajectory {p}")
+        return cls(df, toks[0])
+
+    def from_directory(cls, dir_p: pathlib.Path) -> list[Trajectory]:
+        """
+        Grab a directory of trajectories
+
+        :param dir_p: path to a directory of trajectories
+        :return: Description
+        :rtype: list[Trajectory]
+        """
+        out = []
+        for p in dir_p.iterdir():
+            if p.is_file() and p.name.endswith("_traj.csv"):
+                out.append(cls.from_file(p))
+
+    def to_csv(self, dir_p: pathlib.Path, name: str) -> None:
+        p = dir_p / f"{name}_traj.csv"
+        self.df.to_csv(p)
