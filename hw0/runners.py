@@ -2,11 +2,17 @@
 Runner for particle filter using the test data
 """
 
+import pathlib
+import subprocess
+import pickle
 import numpy as np
 import pandas as pd
 from hw0.data import Dataset, Trajectory
 from hw0.motion import TextbookMotionModel
 from hw0.particle_filter import ParticleFilter
+
+__REPO_ROOT = pathlib.Path(__file__).parent.parent
+DEFAULT_RUN_DIR = __REPO_ROOT / "data/filter-runs"
 
 
 class ParticleFilterRunner:
@@ -14,13 +20,16 @@ class ParticleFilterRunner:
     Class to manage running a particle filter easily
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, run_dir: pathlib.Path = DEFAULT_RUN_DIR):
+        self._run_dir = run_dir
 
-    def run(self, ds: Dataset, pf: ParticleFilter, name: str) -> Trajectory:
+    def run(
+        self, ds: Dataset, pf: ParticleFilter, name: str = "run", write: bool = True
+    ) -> Trajectory:
         """
         Runs the given particle filter on the given dataset, returning
-        a resulting trajectory
+        a resulting trajectory.
+        Writes the result to a directory
 
         :param ds: dataset
         :param pf: particle filter
@@ -68,7 +77,7 @@ class ParticleFilterRunner:
 
         states = np.array(states)
 
-        traj = pd.DataFrame(
+        df = pd.DataFrame(
             {
                 "time_s": control["time_s"].iloc[1:],
                 "x_m": states[:, 0],
@@ -77,7 +86,60 @@ class ParticleFilterRunner:
             }
         ).reset_index()
 
-        return Trajectory(traj, name)
+        traj = Trajectory(df, name)
+
+        if write:
+            self._write(ds, pf, traj, name)
+
+        return traj
+
+    def _write(
+        self, ds: Dataset, pf: ParticleFilter, traj: Trajectory, name: str
+    ) -> pathlib.Path:
+        """
+        Writes this trajectory & associated run info to a directory
+        """
+        # covname = (
+        #     str(pf.measure._cov.flatten())
+        #     .replace("[", "")
+        #     .replace("]", "")
+        #     .replace(" ", "_")
+        # )
+        # desc = (
+        #     f"{ds.path.stem}_cov_{covname}_stddev_{type(pf._u_noise).__name__}_{name}"
+        # )
+        dir_p = unique_path(self._run_dir / name)
+        dir_p.mkdir(parents=True, exist_ok=False)
+
+        print(f"Writing run info to {dir_p}...")
+
+        traj.to_csv(dir_p, name)
+
+        # pickle our pf
+        with open(dir_p / f"{name}_pf.pkl", "wb") as f:
+            pickle.dump(pf, f)
+
+        # write a quick txt file describing the run
+        txt = "Measurement Covariance: \n"
+        txt += np.array2string(pf.measure._cov, precision=3, suppress_small=True)
+        txt += "\n\n Control Noise: \n"
+        txt += str(pf._u_noise.stddev)
+        txt += "\n\n Git commit hash:\n"
+        txt += subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+
+        with open(dir_p / f"{name}_desc.txt", "w") as f:
+            f.write(txt)
+
+    def load(run_dir: pathlib.Path) -> tuple[Trajectory, ParticleFilter, str]:
+        """
+        Loads in a prior run. returns traj, pf, name
+        """
+        name = run_dir.split("_")[-1]
+        traj = Trajectory.from_file(run_dir / f"{name}_traj.csv")
+        with open(f"{name}_pf.pkl", "rb") as f:
+            pf = pickle.load(f)
+
+        return (traj, pf, name)
 
 
 def dead_reckoner(ds: Dataset) -> Trajectory:
@@ -120,3 +182,19 @@ def dead_reckoner(ds: Dataset) -> Trajectory:
         }
     )
     return Trajectory(traj, "dead_reckoning")
+
+
+def unique_path(p: pathlib.Path) -> pathlib.Path:
+    """
+    return a path guaranteed not to overwrite an existing file.
+    if p exists, append _2, _3, etc before the suffix.
+    """
+    if not p.exists():
+        return p
+
+    i = 2
+    while True:
+        candidate = p.parent / f"{p.stem}_{i}{p.suffix}"
+        if not candidate.exists():
+            return candidate
+        i += 1

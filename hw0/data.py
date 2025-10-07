@@ -9,6 +9,8 @@ import pathlib
 
 import pandas as pd
 
+from hw0.particle_filter import ParticleFilter
+
 
 @dataclass
 class Dataset:
@@ -18,6 +20,8 @@ class Dataset:
     Originally sourced from here: http://asrl.utias.utoronto.ca/datasets/mrclam/index.html
     And included in the course canvas website here: https://canvas.northwestern.edu/courses/239182/files/folder/Datasets
     """
+
+    path: pathlib.Path
 
     barcodes: pd.DataFrame
     control: pd.DataFrame
@@ -106,7 +110,7 @@ class Dataset:
             names=["time_s", "subject", "range_m", "bearing_rad"],
         )
 
-        return cls(barcodes, control, groundtruth, landmark, measurement)
+        return cls(p, barcodes, control, groundtruth, landmark, measurement)
 
     def segment(
         self, t0: float, tf: float, normalize_timestamps: bool = False
@@ -118,9 +122,9 @@ class Dataset:
         """
         ds_dict = asdict(self)
         for name in ds_dict:
+            if type(ds_dict[name]) is not pd.DataFrame:
+                continue
             df: pd.DataFrame = ds_dict[name]
-            if type(df) is not pd.DataFrame:
-                raise NotImplementedError("must add code to handle non-dataframes")
             if "time_s" not in df.columns:
                 ds_dict[name] = df.copy()
                 continue

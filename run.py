@@ -153,7 +153,7 @@ def question_7(ds: Dataset) -> None:
     print("!!!!!!!!!!!!!!!!!!! QUESTION 8b !!!!!!!!!!!")
 
     # this is for debugging purposes, to grab only a subset of the points
-    ds = ds.segment_percent(0.0, 0.1, normalize_timestamps=True)
+    ds = ds.segment_percent(0.0, 0.01, normalize_timestamps=True)
     ds.print_info()
 
     # grab the initial location from the first ground truth value
