@@ -227,3 +227,46 @@ class Trajectory:
     def to_csv(self, dir_p: pathlib.Path, name: str) -> None:
         p = dir_p / f"{name}_traj.csv"
         self.df.to_csv(p)
+
+    def segment(
+        self, t0: float, tf: float, normalize_timestamps: bool = False
+    ) -> Dataset:
+        """
+        Make a copy of the dataset where only the timestamps in the range
+        [t0, tf) are included
+        Timestamps are normalized to t0 on request
+        """
+        print(f"Segmenting {self.name}...")
+        new_df = (
+            self.df[(t0 <= self.df["time_s"]) & (self.df["time_s"] < tf)]
+            .copy()
+            .reset_index(drop=True)
+        )
+        if normalize_timestamps:
+            new_df["time_s"] -= t0
+
+        return Trajectory(new_df, self.name)
+
+    def segment_percent(
+        self, p0: float, pf: float, normalize_timestamps: bool = False
+    ) -> Dataset:
+        """
+        Returns copy of the dataset such that we only include entries in the range
+        [p0%, pf%), where both p0 and pf represent percentages of the dataset.
+        for instance,
+        - segment_percent(0, 1) gets the whole dataset;
+        - segment_percent (.25, .5) gets the 2nd quantile of timestamped entries
+
+        timestamp ranges are taken from groundtruth and applied to all.
+
+        :param p0: start percent expressed from 0-1
+        :param pf: end percent expressed from 0-1
+        """
+        t_start = self.df["time_s"].iloc[0]
+        t_end = self.df["time_s"].iloc[-1]
+        range = t_end - t_start
+
+        t0 = t_start + (p0 * range)
+        tf = t_start + (pf * range)
+
+        return self.segment(t0, tf, normalize_timestamps)

@@ -4,6 +4,7 @@ Runs a variety of filter exercises specified in CS469's Homework 0
 
 import pathlib
 import signal
+import argparse
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -30,6 +31,7 @@ REPO_ROOT = pathlib.Path(__file__).parent
 
 def main():
     print("cs469 Homework 1")
+    cli = parse_args()
     # make matplotlib responsive to ctrl+c
     # cite: this stackoverflow answer:
     # https://stackoverflow.com/questions/67977761/how-to-make-plt-show-responsive-to-ctrl-c
@@ -41,10 +43,25 @@ def main():
     # question_2(ds)
     # question_3(ds)
     # question_6(ds)
-    # question_7(ds)
-    # question_8b(ds, write=False)
-    # run_factors(ds)
+    question_7(ds)
+    question_8b(ds, write=False)
+    if cli.generate:
+        run_factors(ds)
     plot_all(ds)
+
+
+def parse_args() -> argparse.Namespace:
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-g",
+        "--generate",
+        action="store_true",
+        help="Generate the full dataset of trajectories. Takes several hours.",
+    )
+
+    return parser.parse_args()
 
 
 def question_2(ds: Dataset) -> None:
@@ -211,7 +228,7 @@ def question_7(ds: Dataset) -> None:
     print("!!!!!!!!!!!!!!!!!!! QUESTION 8b !!!!!!!!!!!")
 
     # this is for debugging purposes, to grab only a subset of the points
-    ds = ds.segment_percent(0.0, 0.01, normalize_timestamps=True)
+    ds = ds.segment_percent(0.0, 0.12, normalize_timestamps=True)
     ds.print_info()
 
     # grab the initial location from the first ground truth value

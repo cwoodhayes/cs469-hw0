@@ -20,8 +20,8 @@ measurement_cov = np.array(
     ]
 )
 control_std = 0.5
-factors = (10, 1, 0.01, 0.001, 0.0001)
-particle_counts = (10, 50, 200)
+factors = (10, 1, 0.01, 0.001, 0.0001, 0.1)
+particle_counts = (10, 50, 200, 1000)
 
 
 def run_factors(ds: Dataset) -> None:
@@ -44,7 +44,7 @@ def run_factors(ds: Dataset) -> None:
     for i_particle in range(len(particle_counts)):
         for i_meas in range(len(factors)):
             for i_control in range(len(factors)):
-                if (i_meas, i_control, i_particle) != (3, 3, 2):
+                if (i_meas, i_control) != (5, 5):
                     continue
                 try:
                     run_name = f"run_{i_meas}_{i_control}_{i_particle}"
@@ -93,9 +93,7 @@ def _get_trajectories() -> np.ndarray:
 
                 try:
                     traj, pf, traj_gt, name = runner.load(run_name)
-                    better_name = (
-                        f"{name} - u_f={factors[i_control]}, z_f={factors[i_meas]}"
-                    )
+                    better_name = f"{name} - u_f={factors[i_control]}, z_f={factors[i_meas]}, M={particle_counts[i_particle]}"
                     out[i_meas][i_control][i_particle] = (
                         traj,
                         pf,
@@ -119,12 +117,43 @@ def plot_all(ds: Dataset) -> None:
 
     # plot cumulative error
     ## 50 particles, all noise combos
-    trajs_50particles = {item[3]: item[0].df for item in trajs[:, :, 1].flatten()}
-    plot.plot_trajectories_error(ds, trajs_50particles)
+    trajs_50particles = {
+        item[3]: item[0].df for item in trajs[:, :, 1].flatten() if item is not None
+    }
+    plot.plot_trajectories_error(ds, trajs_50particles, log=True)
+
+    # per the above, the most significant effect on the quality of the output
+    # comes from the control noise factor.
+    # let's zoom in on that lower group, with factor=1
+    trajs_50particles_u1 = {
+        item[3]: item[0].df for item in trajs[:, 1, 1].flatten() if item is not None
+    }
+    plot.plot_trajectories_error(ds, trajs_50particles_u1, log=True)
+
+    ## the best noise factors here are zf = 1, 10. Let's pick zf=1
 
     ## best noise combo, all particles
+    trajs_u1z1_allparticles = {
+        item[3]: item[0].df for item in trajs[1, 1, :].flatten() if item is not None
+    }
+    plot.plot_trajectories_error(ds, trajs_u1z1_allparticles)
 
     # first 10% time map of the best tuning
+    # since we don't have p=1000 yet, let's go with p=200
+    best_traj_items = trajs[5, 5, 1]
+    bt_traj, bt_pf, gt, bt_name = best_traj_items
+    ds_10p = ds.segment_percent(0, 0.1, normalize_timestamps=True)
+    plot.plot_trajectories_and_particles(
+        ds_10p,
+        bt_traj.segment_percent(0, 0.1, normalize_timestamps=True).df,
+        bt_pf.debug_X_t_last_with_weights,
+        f"{bt_name} Trajectory",
+        traj2=(
+            gt.segment_percent(0, 0.1, normalize_timestamps=True).df,
+            "Dead Reckoned Trajectory",
+        ),
+        final_Xbar_t=(bt_pf.debug_Xbar_t_last_with_weights),
+    )
 
     # map of the best tuning, 100% of dataset
 
