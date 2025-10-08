@@ -1,4 +1,4 @@
-# homework 0
+# homework 0 - CS469
 
 # install instructions
 `pip install -r requirements.txt`
