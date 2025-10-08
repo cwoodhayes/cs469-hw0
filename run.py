@@ -40,11 +40,13 @@ def main():
     # my assigned dataset is ds1, so I'm hardcoding this
     ds = Dataset.from_dataset_directory(REPO_ROOT / "data/ds1")
     # circle_test(ds)
-    # question_2(ds)
-    # question_3(ds)
-    # question_6(ds)
+    question_2(ds)
+    question_3(ds)
+    question_6(ds)
     question_7(ds)
-    question_8b(ds, write=False)
+    ds_short = ds.segment_percent(0.0, 0.12, normalize_timestamps=True)
+    question_7(ds_short)
+    # question_8b(ds, write=False)
     if cli.generate:
         run_factors(ds)
     plot_all(ds)
@@ -101,7 +103,7 @@ def question_3(ds: Dataset) -> None:
     # this is for debugging purposes, to grab only a subset of the points
     # ds = ds.segment_percent(0, 0.1)
     traj = dead_reckoner(ds)
-    plot_trajectories_pretty(ds, traj, "Dead-Reckoned Trajectory")
+    plot_trajectories_pretty(ds, traj.df, "Dead-Reckoned Trajectory")
     # plot_trajectories_error(ds, {"Dead-Reckoned Trajectory": traj})
     plt.show()
 
@@ -228,7 +230,7 @@ def question_7(ds: Dataset) -> None:
     print("!!!!!!!!!!!!!!!!!!! QUESTION 8b !!!!!!!!!!!")
 
     # this is for debugging purposes, to grab only a subset of the points
-    ds = ds.segment_percent(0.0, 0.12, normalize_timestamps=True)
+    # ds = ds.segment_percent(0.0, 0.12, normalize_timestamps=True)
     ds.print_info()
 
     # grab the initial location from the first ground truth value
