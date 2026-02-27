@@ -1,12 +1,86 @@
-# homework 0 - CS469
+# CS/ME 469 – HW0: Filtering Algorithms
 
-# install instructions
-`pip install -r requirements.txt`
+**Author:** Conor Hayes  
+**Dataset:** ds1 (MRCLAM_Dataset9, Robot3)  
+**Algorithm:** Particle Filter (Monte Carlo Localization)
 
-# run instructions
-`python3 run.py` - to generate all plots used in the write-up.
-However, some plots require trajectories to be generated separately using `python3 run.py -g`, which can take quite a while for high particle counts.
+---
 
-Note that you will need to X-out the plots for each question before the program moves on to the next one.
+## Overview
 
-Author: Conor Hayes
+This repo implements a particle filter for mobile robot localization, applied to a real-world wheeled robot dataset from the [UTIAS Multi-Robot Cooperative Localization and Mapping Dataset](http://asrl.utias.utoronto.ca/datasets/mrclam/index.html).
+
+The filter estimates the robot's 2D position and heading over time by combining:
+- A **motion model** based on differential-drive kinematics (arc-based trajectory, following Probabilistic Robotics §5.3)
+- A **measurement model** that computes expected range and bearing to known landmarks, weighted via Gaussian likelihood
+- **Low-variance resampling** for particle set updates (Probabilistic Robotics §4.3)
+
+---
+
+## Install
+
+```bash
+pip install -r requirements.txt
+```
+
+Requires Python 3.13+.
+
+---
+
+## Run
+
+```bash
+python3 run.py
+```
+
+This outputs all plots from the writeup (Questions 2, 3, 6, 7, 8, 9). You'll need to close each plot window before the next one appears.
+
+To regenerate the full multi-run parameter sweep (takes ~5 hours):
+
+```bash
+python3 run.py --generate
+```
+
+Pre-generated trajectory files from prior runs are loaded automatically if present in `data/filter-runs/`.
+
+---
+
+## Data
+
+Place the dataset files in `data/ds1/`:
+
+```
+data/ds1/
+  ds1_Barcodes.dat
+  ds1_Control.dat
+  ds1_Groundtruth.dat
+  ds1_Landmark_Groundtruth.dat
+  ds1_Measurement.dat
+```
+
+Files are available on the course Canvas page.
+
+---
+
+## Code Structure
+
+| File | Description |
+|------|-------------|
+| `run.py` | Entry point; calls one function per question |
+| `hw0/motion.py` | Differential-drive motion model |
+| `hw0/measure.py` | Range/bearing measurement model with Gaussian likelihood |
+| `hw0/particle_filter.py` | Particle filter with low-variance resampling |
+| `hw0/runners.py` | Orchestrates filter runs and dead-reckoning on the dataset |
+| `hw0/runs.py` | Multi-parameter sweep logic and result plotting |
+| `hw0/plot.py` | All plotting functions |
+| `hw0/metrics.py` | Trajectory error metrics (RMSE) |
+| `hw0/data.py` | Dataset loading and segmentation utilities |
+
+---
+
+## Key Results
+
+- **Dead reckoning** diverges quickly from ground truth due to compounding control uncertainty.
+- The **particle filter** tracks the ground truth trajectory closely with well-tuned noise parameters (`u_stddev=0.05`, measurement covariance `[[0.05, 0.02], [0.02, 0.05]]`, 100 particles).
+- Performance degrades during periods of missing landmark measurements, as the filter falls back to motion-only propagation.
+- Control noise has the largest impact on filter accuracy; measurement noise has a secondary effect.
