@@ -1,6 +1,7 @@
-# Particle Filter for Robot Localization (CS/ME469 HW0)
+# Particle Filter for Robot Localization
 
 **Author:** Conor Hayes  
+Written for CS/ME469: Machine Learning and Artificial Intelligence for Robotics, Northwestern University ([Prof. Brenna Argall](https://www.argallab.northwestern.edu/people/brenna/))
 
 ---
 
@@ -14,6 +15,9 @@ The filter estimates the robot's 2D position and heading over time by combining:
 - A **motion model** based on differential-drive kinematics
 - A **measurement model** that computes expected range and bearing to known landmarks given LiDAR-based heading data, weighted via Gaussian likelihood
 - **Low-variance resampling** for particle set updates (Probabilistic Robotics §4.3)
+
+![Particle filter trajectory](figures/pretty_short.png)
+*Fig 8.2 (see writeup) shows the particle filter's estimated trajectory (brown) closely tracking the ground truth (pale purple), while dead reckoning (pale green) diverges. (Only the first 10% of the full trajectory is shown for visual clarity)*
 
 ---
 
