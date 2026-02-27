@@ -6,10 +6,11 @@ Written for CS/ME469: Machine Learning and Artificial Intelligence for Robotics,
 ---
 
 ## Overview
-
-A full writeup including analysis, derivations, and discussion of results is available in [writeup.pdf](writeup.pdf). The code in this repo is structured to support the experiments and plots presented in the writeup.
-
 This repo implements a particle filter for mobile robot localization, applied to a real-world wheeled robot dataset from the [UTIAS Multi-Robot Cooperative Localization and Mapping Dataset](http://asrl.utias.utoronto.ca/datasets/mrclam/index.html).
+
+All code is implemented in Python using only numerical + plotting libraries (NumPy, Pandas, Matplotlib)--no higher-level ML libraries allowed.
+
+A full writeup including analysis, derivations, and discussion of results is available in [writeup.pdf](writeup.pdf).
 
 The filter estimates the robot's 2D position and heading over time by combining:
 - A **motion model** based on differential-drive kinematics
