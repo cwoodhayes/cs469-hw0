@@ -1,8 +1,6 @@
-# CS/ME 469 – HW0: Particle Filter Robot Localization
+# Particle Filter for Robot Localization (CS/ME469 HW0)
 
 **Author:** Conor Hayes  
-**Dataset:** ds1 (MRCLAM_Dataset9, Robot3)  
-**Algorithm:** Particle Filter (Monte Carlo Localization)
 
 ---
 
@@ -58,7 +56,7 @@ data/ds1/
   ds1_Measurement.dat
 ```
 
-Files are available on the [UTIAS Multi-Robot Cooperative Localization and Mapping Dataset](http://asrl.utias.utoronto.ca/datasets/mrclam/index.html) site.
+Files are available on the [UTIAS Multi-Robot Cooperative Localization and Mapping Dataset](http://asrl.utias.utoronto.ca/datasets/mrclam/index.html) site, under MRCLAM_Dataset9, Robot3
 
 ---
 
@@ -84,3 +82,7 @@ Files are available on the [UTIAS Multi-Robot Cooperative Localization and Mappi
 - The **particle filter** tracks the ground truth trajectory closely with well-tuned noise parameters (`u_stddev=0.05`, measurement covariance `[[0.05, 0.02], [0.02, 0.05]]`, 100 particles).
 - Performance degrades during periods of missing landmark measurements, as the filter falls back to motion-only propagation.
 - Control noise has the largest impact on filter accuracy; measurement noise has a secondary effect.
+
+## Acknowledgements
+- Thanks to [Prof. Brenna Argall](https://www.argallab.northwestern.edu/people/brenna/) for providing the assignment for her course *Machine Learning and Artificial Intelligence for Robotics* (CS/ME469) at Northwestern University.
+- Thanks to the UTIAS Multi-Robot Cooperative Localization and Mapping Dataset team for providing the curated dataset.
