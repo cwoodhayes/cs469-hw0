@@ -1,4 +1,4 @@
-# CS/ME 469 – HW0: Filtering Algorithms
+# CS/ME 469 – HW0: Particle Filter Robot Localization
 
 **Author:** Conor Hayes  
 **Dataset:** ds1 (MRCLAM_Dataset9, Robot3)  
@@ -11,8 +11,8 @@
 This repo implements a particle filter for mobile robot localization, applied to a real-world wheeled robot dataset from the [UTIAS Multi-Robot Cooperative Localization and Mapping Dataset](http://asrl.utias.utoronto.ca/datasets/mrclam/index.html).
 
 The filter estimates the robot's 2D position and heading over time by combining:
-- A **motion model** based on differential-drive kinematics (arc-based trajectory, following Probabilistic Robotics §5.3)
-- A **measurement model** that computes expected range and bearing to known landmarks, weighted via Gaussian likelihood
+- A **motion model** based on differential-drive kinematics
+- A **measurement model** that computes expected range and bearing to known landmarks given LiDAR-based heading data, weighted via Gaussian likelihood
 - **Low-variance resampling** for particle set updates (Probabilistic Robotics §4.3)
 
 ---
@@ -20,7 +20,7 @@ The filter estimates the robot's 2D position and heading over time by combining:
 ## Install
 
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
 Requires Python 3.13+.
@@ -30,12 +30,12 @@ Requires Python 3.13+.
 ## Run
 
 ```bash
-python3 run.py
+uv run run.py
 ```
 
 This outputs all plots from the writeup (Questions 2, 3, 6, 7, 8, 9). You'll need to close each plot window before the next one appears.
 
-To regenerate the full multi-run parameter sweep (takes ~5 hours):
+To regenerate the full grid search across filter hyperparameters (takes ~5 hours):
 
 ```bash
 python3 run.py --generate
@@ -58,11 +58,11 @@ data/ds1/
   ds1_Measurement.dat
 ```
 
-Files are available on the course Canvas page.
+Files are available on the [UTIAS Multi-Robot Cooperative Localization and Mapping Dataset](http://asrl.utias.utoronto.ca/datasets/mrclam/index.html) site.
 
 ---
 
-## Code Structure
+## Repo Contents
 
 | File | Description |
 |------|-------------|
@@ -71,7 +71,7 @@ Files are available on the course Canvas page.
 | `hw0/measure.py` | Range/bearing measurement model with Gaussian likelihood |
 | `hw0/particle_filter.py` | Particle filter with low-variance resampling |
 | `hw0/runners.py` | Orchestrates filter runs and dead-reckoning on the dataset |
-| `hw0/runs.py` | Multi-parameter sweep logic and result plotting |
+| `hw0/runs.py` | Grid search logic and result plotting |
 | `hw0/plot.py` | All plotting functions |
 | `hw0/metrics.py` | Trajectory error metrics (RMSE) |
 | `hw0/data.py` | Dataset loading and segmentation utilities |
